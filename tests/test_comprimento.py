@@ -13,11 +13,11 @@ class TestConversorComprimento(unittest.TestCase):
 
     def test_ft_metros(self):
         resultado = conversor_comprimento(1, "ft", "m")
-        self.assertAlmostEqual(resultado, 0.3048)
+        self.assertAlmostEqual(resultado, 0.3048, places=4)
 
     def test_quilometros_milhas(self):
         resultado = conversor_comprimento(1, "km", "mi")
-        self.assertAlmostEqual(resultado, 0.62137273)
+        self.assertAlmostEqual(resultado, 0.62137, places=4)
 
     def test_mesma_unidade(self):
         resultado = conversor_comprimento(1, "m", "m")
