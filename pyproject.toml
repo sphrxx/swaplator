@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swaplator"
+version = "0.1.0"
+description = "Aplicação desktop desenvolvida em Python para cálculos e conversões de medidas e moedas."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "customtkinter",
+]
+
+[project.urls]
+Repository = "https://github.com/sphrxx/swaplator"
+
+[tool.setuptools.packages.find]
+where = ["src"]

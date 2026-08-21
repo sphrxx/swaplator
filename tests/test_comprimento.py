@@ -1,5 +1,5 @@
-from src.swaplator.conversores.conversor import converter
-from src.swaplator.conversores.comprimento import FATORES_COMPRIMENTO
+from swaplator.conversores.conversor import converter
+from swaplator.conversores.comprimento import FATORES_COMPRIMENTO
 import unittest
 
 class TestConversorComprimento(unittest.TestCase):

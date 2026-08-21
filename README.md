@@ -11,10 +11,10 @@ Em desenvolvimento.
 - [ ] Calculadora
 - [ ] Conversor de medidas
   - [x] Comprimento
-  - [ ] Massa
+  - [x] Massa
   - [ ] Temperatura
-  - [ ] Área
-  - [ ] Volume
+  - [x] Área
+  - [x] Volume
 - [ ] Conversor de moedas
 
 ## Tecnologias 

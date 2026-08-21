@@ -1,5 +1,5 @@
-from src.swaplator.conversores.conversor import converter
-from src.swaplator.conversores.area import FATORES_AREA
+from swaplator.conversores.conversor import converter
+from swaplator.conversores.area import FATORES_AREA
 import unittest
 
 class TestConversorArea(unittest.TestCase):

@@ -1,5 +1,5 @@
-from src.swaplator.conversores.conversor import converter
-from src.swaplator.conversores.volume import FATORES_VOLUME
+from swaplator.conversores.conversor import converter
+from swaplator.conversores.volume import FATORES_VOLUME
 import unittest
 
 class TestConversorvolume(unittest.TestCase):

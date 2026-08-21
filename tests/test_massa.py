@@ -1,5 +1,5 @@
-from src.swaplator.conversores.conversor import converter
-from src.swaplator.conversores.massa import FATORES_MASSA
+from swaplator.conversores.conversor import converter
+from swaplator.conversores.massa import FATORES_MASSA
 import unittest
 
 class TestConversorMassa(unittest.TestCase):
