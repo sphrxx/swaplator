@@ -1,4 +1,4 @@
-unidades = {
+FATORES_VOLUME = {
     # Sistema Internacional - Medidas Cúbicas
     'mm³': 0.000000001,
     'cm³': 0.000001,
@@ -24,16 +24,3 @@ unidades = {
     'qt': 0.001136523,
     'gal': 0.00454609
 }
-
-def conversao_volume(valor_inicial, unidade_inicial, unidade_final):
-    if unidade_inicial not in unidades:
-        raise ValueError("Unidade inicial inválida.")
-
-    if unidade_final not in unidades:
-        raise ValueError("Unidade final inválida.")
-
-    fator_inicial = unidades[unidade_inicial]
-    fator_final = unidades[unidade_final]
-    resultado = valor_inicial * fator_inicial / fator_final
-
-    return resultado

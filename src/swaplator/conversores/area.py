@@ -1,4 +1,4 @@
-unidades = {
+FATORES_AREA = {
     # Sistema Internacional
     'mm²': 0.000001,
     'cm²': 0.0001,
@@ -15,16 +15,3 @@ unidades = {
     'ac': 4046.856,
     'mi²': 2589988.11
 }
-
-def conversao_area(valor_inicial, unidade_inicial, unidade_final):
-    if unidade_inicial not in unidades:
-        raise ValueError("Unidade inicial inválida.")
-
-    if unidade_final not in unidades:
-        raise ValueError("Unidade final inválida.")
-
-    fator_inicial = unidades[unidade_inicial]
-    fator_final = unidades[unidade_final]
-    resultado = valor_inicial * fator_inicial / fator_final
-
-    return resultado
