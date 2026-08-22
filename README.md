@@ -8,14 +8,14 @@ Em desenvolvimento.
 
 ## Funcionalidades
 
-- [ ] Calculadora
-- [ ] Conversor de medidas
+- [x] Conversor de medidas
   - [x] Comprimento
   - [x] Massa
-  - [ ] Temperatura
+  - [x] Temperatura
   - [x] Área
   - [x] Volume
-- [ ] Conversor de moedas
+- [ ] Conversor de moedas (em desenvolvimento)
+- [ ] Calculadora (em desenvolvimento)
 
 ## Tecnologias 
 
