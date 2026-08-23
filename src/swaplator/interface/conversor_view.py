@@ -5,10 +5,10 @@ from swaplator.conversores.conversor import converter
 
 class ConversorView:
 
-    def __init__(self, master, FATORES):
+    def __init__(self, master, fatores):
         self.frame = ctk.CTkFrame(master)
 
-        self.fatores = FATORES
+        self.fatores = fatores
 
         self.criar_widgets()
         self.configurar_layout()
