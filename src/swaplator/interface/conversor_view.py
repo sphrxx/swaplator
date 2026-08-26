@@ -1,14 +1,12 @@
 import customtkinter as ctk
 
-from swaplator.conversores.conversor import converter
-
-
 class ConversorView:
 
-    def __init__(self, master, fatores):
+    def __init__(self, master, funcao_conversao, unidades):
         self.frame = ctk.CTkFrame(master)
 
-        self.fatores = fatores
+        self.funcao_conversao = funcao_conversao
+        self.unidades = unidades
 
         self.criar_widgets()
         self.configurar_layout()
@@ -21,10 +19,10 @@ class ConversorView:
         self.entrada = ctk.CTkEntry(self.frame, width=250)
 
         self.label_unidade_inicial = ctk.CTkLabel(self.frame, text="Informe a unidade inicial:")
-        self.combobox_unidade_inicial = ctk.CTkComboBox(self.frame, values=list(self.fatores.keys()), width=250)
+        self.combobox_unidade_inicial = ctk.CTkComboBox(self.frame, values=list(self.unidades), width=250)
 
         self.label_unidade_final = ctk.CTkLabel(self.frame, text="Informe a unidade final:")
-        self.combobox_unidade_final = ctk.CTkComboBox(self.frame, values=list(self.fatores.keys()), width=250)
+        self.combobox_unidade_final = ctk.CTkComboBox(self.frame, values=list(self.unidades), width=250)
 
         self.button = ctk.CTkButton(self.frame, text="Converter", command=self.fazer_conversao)
 
@@ -57,7 +55,7 @@ class ConversorView:
             unidade_inicial = self.combobox_unidade_inicial.get()
             unidade_final = self.combobox_unidade_final.get()
 
-            resultado = converter(valor, unidade_inicial, unidade_final, self.fatores)
+            resultado = self.funcao_conversao(valor, unidade_inicial, unidade_final)
 
             self.label_resultado.configure(text=f"Resultado: {resultado}")
 

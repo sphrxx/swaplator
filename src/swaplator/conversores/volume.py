@@ -1,3 +1,5 @@
+from swaplator.conversores.conversor import converter
+
 FATORES_VOLUME = {
     # Sistema Internacional - Medidas Cúbicas
     'mm³': 0.000000001,
@@ -24,3 +26,6 @@ FATORES_VOLUME = {
     'qt': 0.001136523,
     'gal': 0.00454609
 }
+
+def conversao_volume(valor, unidade_inicial, unidade_final):
+    return converter(valor, unidade_inicial, unidade_final, FATORES_VOLUME)

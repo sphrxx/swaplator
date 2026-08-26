@@ -2,17 +2,19 @@ import customtkinter as ctk
 
 from swaplator.interface.conversor_view import ConversorView
 from swaplator.interface.sidebar import Sidebar
-from swaplator.conversores.comprimento import FATORES_COMPRIMENTO
-from swaplator.conversores.area import FATORES_AREA
-from swaplator.conversores.massa import FATORES_MASSA
-from swaplator.conversores.volume import FATORES_VOLUME
+from swaplator.conversores.comprimento import conversao_comprimento, FATORES_COMPRIMENTO
+from swaplator.conversores.area import conversao_area, FATORES_AREA
+from swaplator.conversores.massa import conversao_massa, FATORES_MASSA
+from swaplator.conversores.volume import conversao_volume, FATORES_VOLUME
+from swaplator.conversores.temperatura import conversao_temperatura, UNIDADES_TEMPERATURA
 
 
-FATORES_CONVERSAO = {
-    "comprimento": FATORES_COMPRIMENTO,
-    "area": FATORES_AREA,
-    "massa": FATORES_MASSA,
-    "volume": FATORES_VOLUME
+CONVERSOES = {
+    "comprimento": (conversao_comprimento, FATORES_COMPRIMENTO),
+    "area": (conversao_area, FATORES_AREA),
+    "massa": (conversao_massa, FATORES_MASSA),
+    "volume": (conversao_volume, FATORES_VOLUME),
+    "temperatura": (conversao_temperatura, UNIDADES_TEMPERATURA)
 }
 
 class Janela:
@@ -44,7 +46,8 @@ class Janela:
 
         self.conversor_atual = ConversorView(
             self.frame_conteudo,
-            FATORES_CONVERSAO["comprimento"]
+            conversao_comprimento,
+            FATORES_COMPRIMENTO
         )
 
     def configurar_layout(self):
@@ -57,11 +60,12 @@ class Janela:
         if self.conversor_atual is not None:
             self.conversor_atual.frame.destroy()
 
-        fatores = FATORES_CONVERSAO[tipo_conversao]
+        funcao_conversao, unidades = CONVERSOES[tipo_conversao]
 
         self.conversor_atual = ConversorView(
             self.frame_conteudo,
-            fatores
+            funcao_conversao,
+            unidades
         )
 
 

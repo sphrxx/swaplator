@@ -1,3 +1,5 @@
+from swaplator.conversores.conversor import converter
+
 FATORES_MASSA = {
     # Sistema Internacional
     'ng': 0.000000001,
@@ -15,3 +17,6 @@ FATORES_MASSA = {
     'oz': 28.3495,
     'lb': 453.592
 }
+
+def conversao_massa(valor, unidade_inicial, unidade_final):
+    return converter(valor, unidade_inicial, unidade_final, FATORES_MASSA)

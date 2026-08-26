@@ -27,6 +27,8 @@ CONVERSORES_DE_CELSIUS = {
     "K": celsius_to_kelvin
 }
 
+UNIDADES_TEMPERATURA = ["°C", "°F", "K"]
+
 # --------------------------------
 
 def conversao_temperatura(valor, unidade_inicial, unidade_final):
@@ -44,3 +46,4 @@ def conversao_temperatura(valor, unidade_inicial, unidade_final):
     resultado = de_celsius(valor_em_celsius)
 
     return resultado
+

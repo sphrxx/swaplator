@@ -1,3 +1,5 @@
+from swaplator.conversores.conversor import converter
+
 FATORES_AREA = {
     # Sistema Internacional
     'mm²': 0.000001,
@@ -15,3 +17,6 @@ FATORES_AREA = {
     'ac': 4046.856,
     'mi²': 2589988.11
 }
+
+def conversao_area(valor, unidade_inicial, unidade_final):
+    return converter(valor, unidade_inicial, unidade_final, FATORES_AREA)

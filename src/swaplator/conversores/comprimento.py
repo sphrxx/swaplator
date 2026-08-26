@@ -1,3 +1,5 @@
+from swaplator.conversores.conversor import converter
+
 FATORES_COMPRIMENTO = {
     # Sistema Métrico
     "mm": 0.001,
@@ -14,3 +16,6 @@ FATORES_COMPRIMENTO = {
     "yd": 0.9144,
     "mi": 1609.34
 }
+
+def conversao_comprimento(valor, unidade_inicial, unidade_final):
+    return converter(valor, unidade_inicial, unidade_final, FATORES_COMPRIMENTO)
