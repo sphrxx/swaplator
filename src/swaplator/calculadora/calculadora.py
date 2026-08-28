@@ -58,19 +58,3 @@ class Calculadora:
 
         self.entrada_atual = str(resultado)
         self.novo_numero = True
-
-        
-
-calculadora = Calculadora()
-calculadora.digitar("1")
-calculadora.digitar("2")
-calculadora.selecionar_operador("+")
-calculadora.digitar("5")
-calculadora.calcular()
-
-print(calculadora.entrada_atual)
-
-calculadora.digitar("3")
-calculadora.digitar("4")
-
-print(calculadora.entrada_atual)
