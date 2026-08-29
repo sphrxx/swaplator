@@ -89,9 +89,11 @@ class ConversorView:
 
         self.label_resultado.configure(text=texto_resultado)
 
+
     def formatar_resultado(self, valor):
         return f"{valor:.6f}".rstrip("0").rstrip(".").replace(".", ",")
     
+
     def limpar(self):
         self.entrada.delete(0, "end")
 
@@ -101,6 +103,7 @@ class ConversorView:
         self.label_resultado.configure(text="O resultado aparecerá aqui.")
 
         self.entrada.focus()
+
 
     def configuracoes_adicionais(self):
         self.entrada.bind("<Return>", lambda evento: self.fazer_conversao())

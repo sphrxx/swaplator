@@ -174,3 +174,14 @@ class TestCalculadora(unittest.TestCase):
         self.assertIsNone(calculadora.operador)
         self.assertEqual(calculadora.entrada_atual, "")
         self.assertFalse(calculadora.novo_numero)
+
+    def test_calculo_multiplo(self):
+        calculadora = Calculadora()
+
+        calculadora.digitar("5")
+        calculadora.selecionar_operador("+")
+        calculadora.digitar("5")
+        calculadora.calcular()
+
+        with self.assertRaises(ValueError):
+            calculadora.calcular()

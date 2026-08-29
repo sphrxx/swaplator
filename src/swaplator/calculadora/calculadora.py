@@ -42,6 +42,9 @@ class Calculadora:
         if(self.entrada_atual == ""):
             raise ValueError("Segundo número não informado.")
         
+        if self.novo_numero:
+            raise ValueError("Cálculo pressionado múltiplas vezes.")
+        
         num2 = float(self.entrada_atual)
 
         if(self.operador == "+"):

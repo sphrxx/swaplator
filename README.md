@@ -8,6 +8,7 @@ Em desenvolvimento.
 
 ## Funcionalidades
 
+- [x] Calculadora
 - [x] Conversor de medidas
   - [x] Comprimento
   - [x] Massa
@@ -15,7 +16,7 @@ Em desenvolvimento.
   - [x] Área
   - [x] Volume
 - [ ] Conversor de moedas (em desenvolvimento)
-- [ ] Calculadora (em desenvolvimento)
+
 
 ## Tecnologias 
 

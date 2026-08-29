@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from swaplator.interface.conversor_view import ConversorView
+from swaplator.interface.calculadora_view import CalculadoraView
 from swaplator.interface.sidebar import Sidebar
 from swaplator.conversores.comprimento import conversao_comprimento, FATORES_COMPRIMENTO
 from swaplator.conversores.area import conversao_area, FATORES_AREA
@@ -39,16 +40,17 @@ class Janela:
     def criar_widgets(self):
         self.sidebar = Sidebar(
             self.janela,
-            self.selecionar_conversao
+            self.selecionar_view
         )
 
         self.frame_conteudo = ctk.CTkFrame(self.janela)
 
-        self.conversor_atual = ConversorView(
+        self.view_atual = ConversorView(
             self.frame_conteudo,
             conversao_comprimento,
             FATORES_COMPRIMENTO
         )
+
 
     def configurar_layout(self):
         self.frame_conteudo.grid_rowconfigure(0, weight=1)
@@ -56,17 +58,21 @@ class Janela:
         self.frame_conteudo.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
 
 
-    def selecionar_conversao(self, tipo_conversao):
-        if self.conversor_atual is not None:
-            self.conversor_atual.frame.destroy()
+    def selecionar_view(self, view):
+        if self.view_atual is not None:
+            self.view_atual.frame.destroy()
 
-        funcao_conversao, unidades = CONVERSOES[tipo_conversao]
+        if view in CONVERSOES:
+            funcao_conversao, unidades = CONVERSOES[view]
 
-        self.conversor_atual = ConversorView(
-            self.frame_conteudo,
-            funcao_conversao,
-            unidades
-        )
+            self.view_atual = ConversorView(
+                self.frame_conteudo,
+                funcao_conversao,
+                unidades
+            )
+
+        elif view == "calculadora":
+            self.view_atual = CalculadoraView(self.frame_conteudo)
 
 
     def iniciar(self):
