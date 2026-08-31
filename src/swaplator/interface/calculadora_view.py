@@ -5,7 +5,7 @@ from swaplator.calculadora.calculadora import Calculadora
 class CalculadoraView:
 
     def __init__(self, frame):
-        self.frame = frame
+        self.frame = ctk.CTkFrame(frame)
         self.calculadora = Calculadora()
 
         self.criar_widgets()
@@ -45,6 +45,8 @@ class CalculadoraView:
 
         
     def configurar_layout(self):
+        self.frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+
         self.frame.grid_rowconfigure(0, weight=1)
         self.frame.grid_rowconfigure(2, weight=1)
 
