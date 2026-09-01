@@ -1,7 +1,5 @@
-import unittest
-
 from swaplator.calculadora.calculadora import Calculadora
-
+import unittest
 
 class TestCalculadora(unittest.TestCase):
 
@@ -13,6 +11,7 @@ class TestCalculadora(unittest.TestCase):
         self.assertEqual(calculadora.entrada_atual, "")
         self.assertFalse(calculadora.novo_numero)
 
+
     def test_digitar(self):
         calculadora = Calculadora()
 
@@ -22,6 +21,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "123")
 
+
     def test_digitar_ponto_inicial(self):
         calculadora = Calculadora()
 
@@ -29,6 +29,7 @@ class TestCalculadora(unittest.TestCase):
         calculadora.digitar("5")
 
         self.assertEqual(calculadora.entrada_atual, "0.5")
+
 
     def test_digitar_dois_pontos(self):
         calculadora = Calculadora()
@@ -38,6 +39,7 @@ class TestCalculadora(unittest.TestCase):
         
         with self.assertRaises(ValueError):
             calculadora.digitar(".")
+
 
     def test_selecionar_operador(self):
         calculadora = Calculadora()
@@ -50,11 +52,13 @@ class TestCalculadora(unittest.TestCase):
         self.assertEqual(calculadora.operador, "+")
         self.assertEqual(calculadora.entrada_atual, "")
 
+
     def test_selecionar_operador_sem_numero(self):
         calculadora = Calculadora()
 
         with self.assertRaises(ValueError):
             calculadora.selecionar_operador("+")
+
 
     def test_calcular_soma(self):
         calculadora = Calculadora()
@@ -66,6 +70,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "7.0")
 
+
     def test_calcular_subtracao(self):
         calculadora = Calculadora()
 
@@ -76,6 +81,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "3.0")
 
+
     def test_calcular_multiplicacao(self):
         calculadora = Calculadora()
 
@@ -85,6 +91,7 @@ class TestCalculadora(unittest.TestCase):
         calculadora.calcular()
 
         self.assertEqual(calculadora.entrada_atual, "25.0")
+
 
     def test_calcular_divisao(self):
         calculadora = Calculadora()
@@ -98,6 +105,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "7.0")
 
+
     def test_divisao_por_zero(self):
         calculadora = Calculadora()
 
@@ -108,6 +116,7 @@ class TestCalculadora(unittest.TestCase):
         with self.assertRaises(ZeroDivisionError):
             calculadora.calcular()
 
+
     def test_calcular_sem_segundo_numero(self):
         calculadora = Calculadora()
 
@@ -116,6 +125,7 @@ class TestCalculadora(unittest.TestCase):
         
         with self.assertRaises(ValueError):
             calculadora.calcular()
+
 
     def test_calcular_soma(self):
         calculadora = Calculadora()
@@ -127,6 +137,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "5.0")
         self.assertTrue(calculadora.novo_numero)
+
 
     def test_digitar_novo_numero_apos_resultado(self):
         calculadora = Calculadora()
@@ -140,6 +151,7 @@ class TestCalculadora(unittest.TestCase):
 
         self.assertEqual(calculadora.entrada_atual, "1")
         self.assertFalse(calculadora.novo_numero)
+
 
     def test_operacao_encadeada(self):
         calculadora = Calculadora()
@@ -155,7 +167,8 @@ class TestCalculadora(unittest.TestCase):
         calculadora.calcular()
 
         self.assertEqual(calculadora.entrada_atual, "33.0")
-        
+
+
     def test_limpar(self):
         calculadora = Calculadora()
 
@@ -175,6 +188,7 @@ class TestCalculadora(unittest.TestCase):
         self.assertEqual(calculadora.entrada_atual, "")
         self.assertFalse(calculadora.novo_numero)
 
+
     def test_calculo_multiplo(self):
         calculadora = Calculadora()
 
@@ -185,3 +199,6 @@ class TestCalculadora(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             calculadora.calcular()
+
+if __name__ == '__main__':
+    unittest.main()
