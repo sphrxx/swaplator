@@ -4,8 +4,8 @@ from swaplator.calculadora.calculadora import Calculadora
 
 class CalculadoraView:
 
-    def __init__(self, frame):
-        self.frame = ctk.CTkFrame(frame)
+    def __init__(self, master):
+        self.frame = ctk.CTkFrame(master)
         self.calculadora = Calculadora()
 
         self.criar_widgets()
