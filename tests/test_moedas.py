@@ -101,5 +101,89 @@ class TestObterCotacoes(unittest.TestCase):
                 "Não foi possível conectar à API."
             )
 
+
+    def test_dados_nao_sao_lista(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = {}
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'DADOS' não é uma 'LISTA'.")
+
+
+    def test_dado_nao_e_dict(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = [
+                "Que a Paixão de Cristo esteja para sempre em nossos corações."
+            ]
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'DADO' não é um 'DICT'.")
+
+
+    def test_quote_ausente(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = [
+                {
+                    "base": "USD",
+                    "rate": 5.4
+                }
+            ]
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'QUOTE' não está presente no dicionário.")
+
+
+    def test_quote_nao_e_string(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = [
+                {
+                    "base": "USD",
+                    "quote": 333,
+                    "rate": 5.4
+                }
+            ]
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'QUOTE' não é uma 'STRING'.")
+
+
+    def test_rate_ausente(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = [
+                {
+                    "base": "USD",
+                    "quote": "BRL"
+                }
+            ]
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'RATE' não está presente no dicionário.")
+
+
+    def test_rate_nao_e_number(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.return_value = [
+                {
+                    "base": "USD",
+                    "quote": "BRL",
+                    "rate": "5.4"
+                }
+            ]
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'RATE' não é um 'NÚMERO'.")
+
 if __name__ == '__main__':
     unittest.main()
