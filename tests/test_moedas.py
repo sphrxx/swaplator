@@ -185,5 +185,14 @@ class TestObterCotacoes(unittest.TestCase):
 
         self.assertEqual(str(contexto.exception), "Formato de resposta inesperado: 'RATE' não é um 'NÚMERO'.")
 
+    def test_json_invalido(self):
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.json.side_effect = ValueError()
+
+            with self.assertRaises(ValueError) as contexto:
+                obter_cotacoes()
+
+        self.assertEqual(str(contexto.exception), "A API retornou um JSON inválido.")
+
 if __name__ == '__main__':
     unittest.main()

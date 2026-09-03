@@ -13,9 +13,13 @@ def obter_cotacoes():
         raise ValueError("Um erro HTTP foi detectado.") from e
 
     except requests.RequestException as e:
-        raise ValueError("Não foi possível conectar à API.") from e    
+        raise ValueError("Não foi possível conectar à API.") from e
 
-    dados = resposta.json()
+    try:
+        dados = resposta.json()
+    
+    except ValueError as e:
+        raise ValueError("A API retornou um JSON inválido.") from e
 
     if not isinstance(dados, list):
         raise ValueError("Formato de resposta inesperado: 'DADOS' não é uma 'LISTA'.")
