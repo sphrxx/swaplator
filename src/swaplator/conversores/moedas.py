@@ -1,12 +1,23 @@
 from numbers import Number
 import requests
 
+moedas = [
+    "BRL",
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY",
+    "CAD",
+    "AUD",
+    "CHF"
+]
+
 
 def obter_cotacoes():
     cotacoes = {}
 
     try:
-        resposta = requests.get("https://api.frankfurter.dev/v2/rates?base=USD&quotes=BRL,EUR")
+        resposta = requests.get(f"https://api.frankfurter.dev/v2/rates?base=USD&quotes={",".join(moedas)}")
         resposta.raise_for_status()
 
     except requests.HTTPError as e:
@@ -46,6 +57,8 @@ def obter_cotacoes():
 
 
 def converter_moedas(valor, moeda_inicial, moeda_final, cotacoes):
+    cotacoes["USD"] = 1
+
     if moeda_inicial not in cotacoes:
         raise ValueError("Moeda inicial inválida.")
     
@@ -54,7 +67,7 @@ def converter_moedas(valor, moeda_inicial, moeda_final, cotacoes):
     
     if moeda_inicial == moeda_final:
         return valor
-
+        
     resultado = valor / cotacoes[moeda_inicial] * cotacoes[moeda_final]
 
     return resultado
