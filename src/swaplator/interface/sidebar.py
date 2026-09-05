@@ -20,6 +20,7 @@ class Sidebar:
         self.button_volume = ctk.CTkButton(self.frame, text="Volume", command=lambda: self.selecionar_view("volume"))
         self.button_temperatura = ctk.CTkButton(self.frame, text="Temperatura", command=lambda: self.selecionar_view("temperatura"))
         self.button_calculadora = ctk.CTkButton(self.frame, text="Calculadora", command=lambda: self.selecionar_view("calculadora"))
+        self.button_moedas = ctk.CTkButton(self.frame, text="Moedas", command=lambda: self.selecionar_view("moedas"))
 
 
     def configurar_layout(self):
@@ -34,3 +35,4 @@ class Sidebar:
         self.button_volume.grid(row=4, column=0, padx=10, pady=10)
         self.button_temperatura.grid(row=5, column=0, padx=10, pady=10)
         self.button_calculadora.grid(row=6, column=0, padx=10, pady=10)
+        self.button_moedas.grid(row=7, column=0, padx=10, pady=10)

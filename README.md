@@ -15,7 +15,7 @@ Em desenvolvimento.
   - [x] Temperatura
   - [x] Área
   - [x] Volume
-- [ ] Conversor de moedas (em desenvolvimento)
+- [x] Conversor de moedas
 
 
 ## Tecnologias 
