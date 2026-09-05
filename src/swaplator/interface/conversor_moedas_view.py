@@ -6,11 +6,22 @@ class ConversorMoedasView:
         self.frame = ctk.CTkFrame(master)
 
         self.funcao_conversao = funcao_conversao
-        self.cotacoes = cotacoes()
+        self.obter_cotacoes = cotacoes
+        
+        try:
+            self.cotacoes = self.obter_cotacoes()
+        
+        except ValueError as erro:
+            self.cotacoes = None
+            self.erro_cotacoes = erro
 
-        self.criar_widgets()
-        self.configurar_layout()
-        self.configuracoes_adicionais()
+        if self.cotacoes is None:
+            self.criar_tela_erro(self.erro_cotacoes)
+    
+        else:
+            self.criar_widgets()
+            self.configurar_layout()
+            self.configuracoes_adicionais()    
         
 
     def criar_widgets(self):
@@ -76,6 +87,7 @@ class ConversorMoedasView:
 
         except ValueError as erro:
             self.label_resultado.configure(text=f"Erro: {erro}")
+            self.erro_cotacoes = erro
             return
         
         valor_formatado = str(valor).replace(".", ",")
@@ -109,3 +121,41 @@ class ConversorMoedasView:
 
         self.combobox_moeda_inicial.set(list(self.cotacoes.keys())[0])
         self.combobox_moeda_final.set(list(self.cotacoes.keys())[1])
+
+
+    def criar_tela_erro(self, erro_cotacoes):
+        self.frame.grid(row=0, column=0, sticky="nsew")
+        self.frame.grid_columnconfigure(0, weight=1)
+
+        self.label_titulo = ctk.CTkLabel(self.frame, text="Swaplator", font=("Arial", 30))
+        self.label_titulo.grid(row=0, column=0, padx=10, pady=10)
+
+        self.label_erro = ctk.CTkLabel(self.frame, text=f"Não foi possível obter as cotações das moedas: {erro_cotacoes}")
+        self.label_erro.grid(row=1, column=0, padx=10, pady=10)
+
+        self.button_retry = ctk.CTkButton(self.frame, text="Tentar novamente", command=self.retry_cotacoes)
+        self.button_retry.grid(row=2, column=0, padx=10, pady=10)
+
+    
+    def retry_cotacoes(self):
+        try:
+            self.cotacoes = self.obter_cotacoes()
+        
+        except ValueError as erro:
+            self.cotacoes = None
+            self.erro_cotacoes = erro
+
+        if self.cotacoes is None:
+            self.limpar_frame()
+            self.criar_tela_erro(self.erro_cotacoes)
+
+        else:
+            self.limpar_frame()
+            self.criar_widgets()
+            self.configurar_layout()
+            self.configuracoes_adicionais()
+
+    
+    def limpar_frame(self):
+        for widget in self.frame.winfo_children():
+            widget.destroy()
