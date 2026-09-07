@@ -8,14 +8,26 @@ class CalculadoraView:
         self.frame = ctk.CTkFrame(master)
         self.calculadora = Calculadora()
 
+        self.modo = "calculo"
+        self.tipo_conversao = None
+        self.unidade_inicial = None
+        self.unidade_final = None
+
         self.criar_widgets()
         self.configurar_layout()
 
         
     def criar_widgets(self):
         self.display = ctk.CTkLabel(self.frame, text="Display")
-
         self.frame_botoes = ctk.CTkFrame(self.frame)
+        
+        self.criar_botoes_numericos()
+        self.criar_botoes_operadores()
+        self.criar_botoes_controladores()
+        
+
+    def criar_botoes_numericos(self):
+        
         self.botoes_numericos = [
             ["7", "8", "9"],
             ["4", "5", "6"],
@@ -28,22 +40,26 @@ class CalculadoraView:
                 button = ctk.CTkButton(self.frame_botoes, text=valor, command=lambda valor=valor: self.digitar(valor))
                 button.grid(row=linha, column=coluna, padx=3, pady=3, sticky="nsew")
 
+        self.button_decimal = ctk.CTkButton(self.frame_botoes, text=".", command=lambda: self.digitar("."))
+        self.button_decimal.grid(row=3, column=1, padx=3, pady=3, sticky="nsew")
+
+
+    def criar_botoes_operadores(self):
         self.botoes_operadores = ["/", "*", "-", "+"]
 
         for coluna, operador in enumerate(self.botoes_operadores):
             button = ctk.CTkButton(self.frame_botoes, text=operador, command=lambda operador=operador: self.selecionar_operador(operador))
             button.grid(row=coluna, column=3, padx=3, pady=3, sticky="nsew")
 
-        self.button_decimal = ctk.CTkButton(self.frame_botoes, text=".", command=lambda: self.digitar("."))
-        self.button_decimal.grid(row=3, column=1, padx=3, pady=3, sticky="nsew")
-
+    
+    def criar_botoes_controladores(self):
         self.button_calcular = ctk.CTkButton(self.frame_botoes, text="=", command=self.calcular)
         self.button_calcular.grid(row=3, column=2, padx=3, pady=3, sticky="nsew")
 
         self.button_limpar = ctk.CTkButton(self.frame, text="Limpar", command=self.limpar)
         self.button_limpar.grid(row=1, column=0, padx=13, pady=3, sticky="ew")
 
-        
+
     def configurar_layout(self):
         self.frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
 
