@@ -197,10 +197,11 @@ class TestCalculadora(unittest.TestCase):
         calculadora.digitar("5")
         calculadora.calcular()
 
-        with self.assertRaises(ValueError):
-            calculadora.calcular()
+        # Apertar "=" de novo não é erro: o resultado continua o mesmo.
+        self.assertEqual(calculadora.calcular(), 10)
+        self.assertEqual(calculadora.entrada_atual, "10.0")
 
-    
+
     def test_calcular_return(self):
         calculadora = Calculadora()
 

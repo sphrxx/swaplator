@@ -13,11 +13,17 @@ moedas = [
 ]
 
 
+TIMEOUT_SEGUNDOS = 10
+
+
 def obter_cotacoes():
     cotacoes = {}
 
     try:
-        resposta = requests.get(f"https://api.frankfurter.dev/v2/rates?base=USD&quotes={",".join(moedas)}")
+        resposta = requests.get(
+            f"https://api.frankfurter.dev/v2/rates?base=USD&quotes={",".join(moedas)}",
+            timeout=TIMEOUT_SEGUNDOS
+        )
         resposta.raise_for_status()
 
     except requests.HTTPError as e:

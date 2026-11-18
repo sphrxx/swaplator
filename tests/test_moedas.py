@@ -60,7 +60,10 @@ class TestObterCotacoes(unittest.TestCase):
             resposta = obter_cotacoes()
 
             self.assertEqual(resposta, {"BRL": 5, "EUR": 0.8})
-            mock_get.assert_called_once_with("https://api.frankfurter.dev/v2/rates?base=USD&quotes=BRL,USD,EUR,GBP,JPY,CAD,AUD,CHF")
+            mock_get.assert_called_once_with(
+                "https://api.frankfurter.dev/v2/rates?base=USD&quotes=BRL,USD,EUR,GBP,JPY,CAD,AUD,CHF",
+                timeout=10
+            )
 
     
     def test_request_http_error(self):

@@ -1,25 +1,17 @@
 import customtkinter as ctk
 
 from swaplator.interface import tema
-from swaplator.conversores.comprimento import FATORES_COMPRIMENTO
-from swaplator.conversores.area import FATORES_AREA
-from swaplator.conversores.massa import FATORES_MASSA
-from swaplator.conversores.volume import FATORES_VOLUME
-from swaplator.conversores.temperatura import UNIDADES_TEMPERATURA
-from swaplator.conversores.conversor import converter
+from swaplator.conversores.registro import CONVERSOES, converter_por_tipo
 from swaplator.calculadora.calculadora import Calculadora
 
 
-CONVERSOES = {
-    "comprimento": FATORES_COMPRIMENTO,
-    "area": FATORES_AREA,
-    "massa": FATORES_MASSA,
-    "volume": FATORES_VOLUME,
-    "temperatura": UNIDADES_TEMPERATURA
-}
+# Nomes dos modos como constantes: se alguém digitar um nome errado, o Python
+# avisa na hora (NameError), em vez de a comparação falhar em silêncio.
+MODO_CALCULO = "calculo"
+MODO_CONVERSAO = "conversao"
 
 # Nome interno do modo -> texto exibido no seletor (e o caminho inverso).
-MODOS = {"calculo": "Calculadora", "conversao": "Conversor"}
+MODOS = {MODO_CALCULO: "Calculadora", MODO_CONVERSAO: "Conversor"}
 MODOS_INVERSO = {nome: modo for modo, nome in MODOS.items()}
 
 # A Calculadora continua recebendo "/", "*", "-", "+". Só o símbolo mostrado muda.
@@ -32,7 +24,7 @@ class CalculadoraView:
         self.frame = ctk.CTkFrame(master, fg_color="transparent")
         self.calculadora = Calculadora()
 
-        self.modo = "calculo"
+        self.modo = MODO_CALCULO
         self.tipo_conversao = None
         self.unidade_inicial = None
         self.unidade_final = None
@@ -70,7 +62,7 @@ class CalculadoraView:
         self.criar_botoes_operadores()
         self.criar_botoes_controladores()
 
-        if self.modo == "conversao":
+        if self.modo == MODO_CONVERSAO:
             self.criar_widgets_conversao()
 
 
@@ -173,7 +165,7 @@ class CalculadoraView:
 
         self.frame_botoes.grid(row=3, column=0, padx=10, pady=(4, 10))
 
-        if self.modo == "conversao":
+        if self.modo == MODO_CONVERSAO:
             self.frame_comboboxes_conversao.grid(row=1, column=0, padx=5, pady=4)
 
             # Lado a lado (e não empilhados) para caber na altura da janela.
@@ -214,8 +206,12 @@ class CalculadoraView:
 
 
     def digitar(self, valor):
-        self.calculadora.digitar(valor)
-        self.atualizar_display()
+        try:
+            self.calculadora.digitar(valor)
+            self.atualizar_display()
+
+        except ValueError as erro:
+            print(erro)
 
 
     def selecionar_operador(self, operador):
@@ -229,17 +225,17 @@ class CalculadoraView:
 
     def calcular(self):
         try:
-            if self.modo == "calculadora":
+            if self.modo == MODO_CALCULO:
                 self.calculadora.calcular()
                 self.atualizar_display()
 
-            elif self.modo == "conversao":
+            elif self.modo == MODO_CONVERSAO:
                 resultado = self.calculadora.calcular()
                 unidade_inicial = self.combobox_unidade_inicial.get()
                 unidade_final = self.combobox_unidade_final.get()
-                fatores = CONVERSOES[self.combobox_tipo_conversao.get()]
+                tipo = self.combobox_tipo_conversao.get()
 
-                resultado_conversao = converter(resultado, unidade_inicial, unidade_final, fatores)
+                resultado_conversao = converter_por_tipo(tipo, resultado, unidade_inicial, unidade_final)
                 self.mostrar_no_display(f"{resultado} {unidade_inicial} = {resultado_conversao} {unidade_final}")
 
         except ValueError as erro:
@@ -273,8 +269,8 @@ class CalculadoraView:
 
 
     def extrair_unidades(self, tipo_conversao):
-        fatores = CONVERSOES[tipo_conversao]
-        unidades = list(fatores)
+        _, unidades_disponiveis = CONVERSOES[tipo_conversao]
+        unidades = list(unidades_disponiveis)
 
         return unidades
 

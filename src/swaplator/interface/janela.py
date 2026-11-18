@@ -5,21 +5,8 @@ from swaplator.interface.calculadora_view import CalculadoraView
 from swaplator.interface.conversor_moedas_view import ConversorMoedasView
 from swaplator.interface.sidebar import Sidebar
 from swaplator.interface import tema
-from swaplator.conversores.comprimento import conversao_comprimento, FATORES_COMPRIMENTO
-from swaplator.conversores.area import conversao_area, FATORES_AREA
-from swaplator.conversores.massa import conversao_massa, FATORES_MASSA
-from swaplator.conversores.volume import conversao_volume, FATORES_VOLUME
-from swaplator.conversores.temperatura import conversao_temperatura, UNIDADES_TEMPERATURA
+from swaplator.conversores.registro import CONVERSOES
 from swaplator.conversores.moedas import converter_moedas, obter_cotacoes
-
-
-CONVERSOES = {
-    "comprimento": (conversao_comprimento, FATORES_COMPRIMENTO),
-    "area": (conversao_area, FATORES_AREA),
-    "massa": (conversao_massa, FATORES_MASSA),
-    "volume": (conversao_volume, FATORES_VOLUME),
-    "temperatura": (conversao_temperatura, UNIDADES_TEMPERATURA)
-}
 
 class Janela:
     
@@ -52,10 +39,12 @@ class Janela:
 
         self.frame_conteudo = ctk.CTkFrame(self.janela, fg_color=tema.COR_FUNDO)
 
+        funcao_conversao, unidades = CONVERSOES["comprimento"]
+
         self.view_atual = ConversorView(
             self.frame_conteudo,
-            conversao_comprimento,
-            FATORES_COMPRIMENTO
+            funcao_conversao,
+            unidades
         )
 
 
