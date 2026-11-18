@@ -39,25 +39,34 @@ class Calculadora:
             
 
     def calcular(self):
-        if(self.entrada_atual == ""):
-            raise ValueError("Segundo número não informado.")
-        
-        if self.novo_numero:
-            raise ValueError("Cálculo pressionado múltiplas vezes.")
-        
-        num2 = float(self.entrada_atual)
+        if(self.novo_numero):
+            resultado = float(self.entrada_atual)
 
-        if(self.operador == "+"):
-            resultado = self.num1 + num2
-        
-        elif(self.operador == "-"):
-            resultado = self.num1 - num2
+        elif self.operador is None:
+            if(self.entrada_atual == ""):
+                raise ValueError("Número não informado.")
 
-        elif(self.operador == "*" or self.operador == "x"):
-            resultado = self.num1 * num2
+            resultado = float(self.entrada_atual)
 
-        elif(self.operador == "/" or self.operador == ":"):
-            resultado = self.num1 / num2
+        else:
+            if(self.entrada_atual == ""):
+                raise ValueError("Segundo número não informado.")
+
+            num2 = float(self.entrada_atual)
+
+            if(self.operador == "+"):
+                resultado = self.num1 + num2
+            
+            elif(self.operador == "-"):
+                resultado = self.num1 - num2
+
+            elif(self.operador == "*" or self.operador == "x"):
+                resultado = self.num1 * num2
+
+            elif(self.operador == "/" or self.operador == ":"):
+                resultado = self.num1 / num2
 
         self.entrada_atual = str(resultado)
         self.novo_numero = True
+
+        return resultado

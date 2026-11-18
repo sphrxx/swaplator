@@ -4,6 +4,7 @@ from swaplator.interface.conversor_view import ConversorView
 from swaplator.interface.calculadora_view import CalculadoraView
 from swaplator.interface.conversor_moedas_view import ConversorMoedasView
 from swaplator.interface.sidebar import Sidebar
+from swaplator.interface import tema
 from swaplator.conversores.comprimento import conversao_comprimento, FATORES_COMPRIMENTO
 from swaplator.conversores.area import conversao_area, FATORES_AREA
 from swaplator.conversores.massa import conversao_massa, FATORES_MASSA
@@ -23,6 +24,7 @@ CONVERSOES = {
 class Janela:
     
     def __init__(self):
+        tema.aplicar_tema()
         self.janela = ctk.CTk()
 
         self.configurar_janela()
@@ -31,8 +33,9 @@ class Janela:
         
 
     def configurar_janela(self):
-        self.janela.geometry("800x600")
+        self.janela.geometry("900x700")
         self.janela.title("Swaplator")
+        self.janela.configure(fg_color=tema.COR_FUNDO)
 
         self.janela.grid_rowconfigure(0, weight=1)
         self.janela.grid_columnconfigure(0, weight=0)
@@ -45,7 +48,9 @@ class Janela:
             self.selecionar_view
         )
 
-        self.frame_conteudo = ctk.CTkFrame(self.janela)
+        self.sidebar.marcar_ativo("comprimento")
+
+        self.frame_conteudo = ctk.CTkFrame(self.janela, fg_color=tema.COR_FUNDO)
 
         self.view_atual = ConversorView(
             self.frame_conteudo,
@@ -57,10 +62,12 @@ class Janela:
     def configurar_layout(self):
         self.frame_conteudo.grid_rowconfigure(0, weight=1)
         self.frame_conteudo.grid_columnconfigure(0, weight=1)
-        self.frame_conteudo.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        self.frame_conteudo.grid(row=0, column=1, padx=tema.ESPACO, pady=tema.ESPACO, sticky="nsew")
 
 
     def selecionar_view(self, view):
+        self.sidebar.marcar_ativo(view)
+
         if self.view_atual is not None:
             self.view_atual.frame.destroy()
 

@@ -200,5 +200,15 @@ class TestCalculadora(unittest.TestCase):
         with self.assertRaises(ValueError):
             calculadora.calcular()
 
+    
+    def test_calcular_return(self):
+        calculadora = Calculadora()
+
+        calculadora.digitar("3")
+        calculadora.selecionar_operador("+")
+        calculadora.digitar("2")
+        
+        self.assertEqual(calculadora.calcular(), 5)
+
 if __name__ == '__main__':
     unittest.main()
