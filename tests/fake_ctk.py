@@ -116,6 +116,25 @@ class Fake:
     def winfo_height(self):
         return 0
 
+    # --- Métodos de janela (CTk): só anotam o que foi pedido -------------
+    def geometry(self, texto=None):
+        self.geometria = texto
+
+    def minsize(self, largura, altura):
+        self.minimo = (largura, altura)
+
+    def title(self, texto):
+        self.titulo = texto
+
+    def winfo_screenwidth(self):
+        return 1920
+
+    def winfo_screenheight(self):
+        return 1080
+
+    def mainloop(self):
+        pass
+
     def after_idle(self, funcao, *args):
         funcao(*args)
 
@@ -161,6 +180,16 @@ class FakeCanvas(Fake):
         super().delete(*args)
 
 
+class FakeScalingTracker:
+    """Imita o `ctk.ScalingTracker`: a escala da tela é escolhida pelo teste."""
+
+    escala = 1.0
+
+    @classmethod
+    def get_window_scaling(cls, janela):
+        return cls.escala
+
+
 NOMES_DOS_WIDGETS = (
     "CTk", "CTkFrame", "CTkLabel", "CTkButton",
     "CTkEntry", "CTkComboBox", "CTkSegmentedButton",
@@ -183,6 +212,8 @@ def instalar():
         setattr(modulo, nome, Fake)
 
     modulo.CTkCanvas = FakeCanvas
+    modulo.ScalingTracker = FakeScalingTracker
+    modulo.set_appearance_mode = lambda modo: None
 
     sys.modules["customtkinter"] = modulo
 

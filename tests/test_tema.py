@@ -75,6 +75,55 @@ class TestTema(unittest.TestCase):
         with self.assertRaises(ValueError):
             tema.estilo_botao("xyz")
 
+    def test_estilos_usam_as_constantes_de_fonte(self):
+        self.assertEqual(tema.estilo_botao("digito")["font"], tema.fonte(tema.TAM_GRANDE))
+        self.assertEqual(tema.estilo_botao("digito", compacto=True)["font"], tema.fonte(tema.TAM_TEXTO))
+        self.assertEqual(tema.estilo_entrada()["font"], tema.fonte(tema.TAM_TEXTO))
+        self.assertEqual(tema.estilo_combobox()["font"], tema.fonte(tema.TAM_PEQUENO))
+
+    def test_tamanho_fonte_display_diminui_conforme_o_texto_cresce(self):
+        casos = [
+            (1, tema.TAM_DISPLAY),
+            (9, tema.TAM_DISPLAY),
+            (10, 32),
+            (15, 32),
+            (16, tema.TAM_GRANDE),
+            (22, tema.TAM_GRANDE),
+            (23, 20),
+            (30, 20),
+            (31, tema.TAM_TEXTO),
+            (80, tema.TAM_TEXTO),
+        ]
+
+        for quantidade, esperado in casos:
+            with self.subTest(caracteres=quantidade):
+                self.assertEqual(tema.tamanho_fonte_display("1" * quantidade), esperado)
+
+    def test_tamanho_inicial_em_tela_grande_e_o_tamanho_preferido(self):
+        self.assertEqual(tema.tamanho_inicial_janela(1920, 1080), (960, 760))
+
+    def test_tamanho_inicial_respeita_margem_da_tela(self):
+        # 768 px de altura x 90% = 691 px úteis, menos que os 760 preferidos.
+        self.assertEqual(tema.tamanho_inicial_janela(1366, 768), (960, 691))
+
+    def test_tamanho_inicial_considera_a_escala_da_tela(self):
+        # 1080 px a 150% valem 720 unidades; 90% disso (648) fica abaixo do
+        # mínimo, então vale o mínimo.
+        self.assertEqual(
+            tema.tamanho_inicial_janela(1920, 1080, escala=1.5),
+            (960, tema.JANELA_ALTURA_MINIMA)
+        )
+
+    def test_tamanho_inicial_nunca_fica_abaixo_do_minimo(self):
+        self.assertEqual(
+            tema.tamanho_inicial_janela(800, 600),
+            (tema.JANELA_LARGURA_MINIMA, tema.JANELA_ALTURA_MINIMA)
+        )
+
+    def test_minimo_cabe_no_tamanho_preferido(self):
+        self.assertLessEqual(tema.JANELA_LARGURA_MINIMA, tema.JANELA_LARGURA_INICIAL)
+        self.assertLessEqual(tema.JANELA_ALTURA_MINIMA, tema.JANELA_ALTURA_INICIAL)
+
 
 if __name__ == "__main__":
     unittest.main()

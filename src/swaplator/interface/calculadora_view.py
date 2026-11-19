@@ -45,7 +45,7 @@ class CalculadoraView:
             unselected_color=tema.COR_DIGITO,
             unselected_hover_color=tema.COR_DIGITO_HOVER,
             text_color=tema.COR_TEXTO,
-            font=tema.fonte(16),
+            font=tema.fonte(tema.TAM_TEXTO),
             corner_radius=tema.RAIO_CARTAO
         )
 
@@ -55,7 +55,7 @@ class CalculadoraView:
             self.frame,
             text="0",
             anchor="e",
-            font=tema.fonte(48),
+            font=tema.fonte(tema.TAM_DISPLAY),
             text_color=tema.COR_TEXTO
         )
         self.frame_botoes = ctk.CTkFrame(self.frame, fg_color="transparent")
@@ -140,13 +140,15 @@ class CalculadoraView:
         self.combobox_unidade_inicial = ctk.CTkComboBox(
             self.frame_comboboxes_conversao,
             values=unidades,
-            width=160,
+            width=tema.LARGURA_COMBOBOX_UNIDADE,
+            height=tema.ALTURA_CONTROLE,
             **tema.estilo_combobox()
         )
         self.combobox_unidade_final = ctk.CTkComboBox(
             self.frame_comboboxes_conversao,
             values=unidades,
-            width=160,
+            width=tema.LARGURA_COMBOBOX_UNIDADE,
+            height=tema.ALTURA_CONTROLE,
             **tema.estilo_combobox()
         )
 
@@ -179,14 +181,7 @@ class CalculadoraView:
         texto = texto or "0"
 
         # Quanto mais longo o texto, menor a fonte, para nunca estourar a tela.
-        if len(texto) > 15:
-            tamanho = 24
-        elif len(texto) > 9:
-            tamanho = 32
-        else:
-            tamanho = 48
-
-        self.display.configure(text=texto, font=tema.fonte(tamanho))
+        self.display.configure(text=texto, font=tema.fonte(tema.tamanho_fonte_display(texto)))
 
 
     def atualizar_display(self):

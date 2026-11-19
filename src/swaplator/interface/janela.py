@@ -20,7 +20,18 @@ class Janela:
         
 
     def configurar_janela(self):
-        self.janela.geometry("900x700")
+        # Tamanho preferido, mas limitado ao espaço real da tela. A escala (125%,
+        # 150%...) converte os pixels da tela nas unidades que o geometry() usa.
+        escala = ctk.ScalingTracker.get_window_scaling(self.janela)
+        largura, altura = tema.tamanho_inicial_janela(
+            self.janela.winfo_screenwidth(),
+            self.janela.winfo_screenheight(),
+            escala
+        )
+
+        self.janela.geometry(f"{largura}x{altura}")
+        # Sem um mínimo, dá para encolher a janela até cortar os botões.
+        self.janela.minsize(tema.JANELA_LARGURA_MINIMA, tema.JANELA_ALTURA_MINIMA)
         self.janela.title("Swaplator")
         self.janela.configure(fg_color=tema.COR_FUNDO)
 

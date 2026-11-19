@@ -82,7 +82,7 @@ class SeletorTipo(ctk.CTkFrame):
 
         self._texto = ctk.CTkLabel(self, text="", anchor="w",
                                    text_color=tema.COR_TEXTO,
-                                   font=tema.fonte(14))
+                                   font=tema.fonte(tema.TAM_PEQUENO))
         self._texto.grid(row=0, column=1, sticky="w")
 
         seta = ctk.CTkCanvas(self, width=lado, height=lado,
@@ -235,7 +235,7 @@ class SeletorTipo(ctk.CTkFrame):
                    pady=self._px(6))
 
         texto = ctk.CTkLabel(linha, text=rotulo, anchor="w",
-                             font=tema.fonte(14))
+                             font=tema.fonte(tema.TAM_PEQUENO))
         texto.grid(row=0, column=1, sticky="w")
 
         self.linhas[chave] = linha

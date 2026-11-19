@@ -8,8 +8,9 @@ def setUpModule():
     # precisa estar instalado antes do import.
     fake_ctk.instalar()
 
-    global CalculadoraView
+    global CalculadoraView, tema
     from swaplator.interface.calculadora_view import CalculadoraView
+    from swaplator.interface import tema
 
 
 def tearDownModule():
@@ -71,6 +72,48 @@ class TestCalculadoraView(unittest.TestCase):
         self.view.mudar_modo("calculo")
 
         self.assertNotIn(lista, janela.filhos)
+
+
+class TestAparenciaDaCalculadora(unittest.TestCase):
+
+    def setUp(self):
+        self.view = CalculadoraView(fake_ctk.Fake())
+
+    def test_fonte_do_visor_diminui_para_numeros_longos(self):
+        for digito in "1234567891234567":   # 16 dígitos, sem zero (o visor também é "0")
+            fake_ctk.achar_botao(self.view.frame_botoes, digito).opcoes["command"]()
+
+        self.assertEqual(self.view.display.opcoes["font"], tema.fonte(tema.TAM_GRANDE))
+
+    def test_fonte_do_visor_e_grande_para_numeros_curtos(self):
+        fake_ctk.achar_botao(self.view.frame_botoes, "7").opcoes["command"]()
+
+        self.assertEqual(self.view.display.opcoes["font"], tema.fonte(tema.TAM_DISPLAY))
+
+    def test_controles_da_linha_de_conversao_tem_a_mesma_altura(self):
+        self.view.mudar_modo("conversao")
+        controles = (
+            self.view.combobox_tipo_conversao,
+            self.view.combobox_unidade_inicial,
+            self.view.combobox_unidade_final,
+        )
+
+        for controle in controles:
+            self.assertEqual(controle.opcoes["height"], tema.ALTURA_CONTROLE)
+
+    def test_caixas_de_unidade_sao_estreitas_para_caber_na_janela_minima(self):
+        self.view.mudar_modo("conversao")
+
+        for caixa in (self.view.combobox_unidade_inicial, self.view.combobox_unidade_final):
+            self.assertEqual(caixa.opcoes["width"], tema.LARGURA_COMBOBOX_UNIDADE)
+
+    def test_linha_de_conversao_cabe_na_largura_minima_da_janela(self):
+        # Largura da linha (seletor + 2 caixas + 3x2x4 de espaço + 10 de borda),
+        # mais bordas da tela (20 + 16) e da barra lateral (~220).
+        linha = tema.LARGURA_SELETOR_TIPO + 2 * tema.LARGURA_COMBOBOX_UNIDADE + 24 + 10
+        necessario = linha + 20 + 16 + 220
+
+        self.assertLessEqual(necessario, tema.JANELA_LARGURA_MINIMA)
 
 
 class TestTrocaDeModoAdiada(unittest.TestCase):

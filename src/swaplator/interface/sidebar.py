@@ -34,7 +34,7 @@ class Sidebar:
         self.label_titulo = ctk.CTkLabel(
             self.frame,
             text="Swaplator",
-            font=tema.fonte(24, "bold"),
+            font=tema.fonte(tema.TAM_GRANDE, "bold"),
             text_color=tema.COR_TEXTO
         )
 
@@ -49,7 +49,7 @@ class Sidebar:
                 fg_color="transparent",
                 hover_color=tema.COR_DIGITO,
                 text_color=tema.COR_TEXTO,
-                font=tema.fonte(16),
+                font=tema.fonte(tema.TAM_TEXTO),
                 corner_radius=tema.RAIO_CARTAO,
                 command=lambda view=view: self.selecionar_view(view)
             )

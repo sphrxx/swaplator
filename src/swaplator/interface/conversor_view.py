@@ -24,7 +24,7 @@ class ConversorView:
             self.cartao,
             text=texto,
             anchor="w",
-            font=tema.fonte(14),
+            font=tema.fonte(tema.TAM_PEQUENO),
             text_color=tema.COR_TEXTO_SECUNDARIO
         )
 
@@ -39,7 +39,7 @@ class ConversorView:
         self.label_titulo = ctk.CTkLabel(
             self.cartao,
             text="Swaplator",
-            font=tema.fonte(30, "bold"),
+            font=tema.fonte(tema.TAM_TITULO, "bold"),
             text_color=tema.COR_TEXTO
         )
 
@@ -82,9 +82,9 @@ class ConversorView:
             self.cartao,
             text=TEXTO_PADRAO,
             width=tema.LARGURA_CAMPO,
-            height=72,
+            height=tema.ALTURA_RESULTADO,
             wraplength=tema.LARGURA_CAMPO,
-            font=tema.fonte(16),
+            font=tema.fonte(tema.TAM_TEXTO),
             text_color=tema.COR_TEXTO_SECUNDARIO
         )
 
@@ -117,9 +117,9 @@ class ConversorView:
 
     def mostrar_resultado(self, texto):
         if texto.startswith("Erro"):
-            self.label_resultado.configure(text=texto, text_color=tema.COR_ERRO, font=tema.fonte(16))
+            self.label_resultado.configure(text=texto, text_color=tema.COR_ERRO, font=tema.fonte(tema.TAM_TEXTO))
         else:
-            self.label_resultado.configure(text=texto, text_color=tema.COR_TEXTO, font=tema.fonte(24, "bold"))
+            self.label_resultado.configure(text=texto, text_color=tema.COR_TEXTO, font=tema.fonte(tema.TAM_GRANDE, "bold"))
 
 
     def fazer_conversao(self):
@@ -171,7 +171,7 @@ class ConversorView:
         self.label_resultado.configure(
             text=TEXTO_PADRAO,
             text_color=tema.COR_TEXTO_SECUNDARIO,
-            font=tema.fonte(16)
+            font=tema.fonte(tema.TAM_TEXTO)
         )
 
         self.entrada.focus()

@@ -42,7 +42,7 @@ class ConversorMoedasView:
         self.label_titulo = ctk.CTkLabel(
             self.cartao,
             text="Swaplator",
-            font=tema.fonte(30, "bold"),
+            font=tema.fonte(tema.TAM_TITULO, "bold"),
             text_color=tema.COR_TEXTO
         )
 
@@ -52,7 +52,7 @@ class ConversorMoedasView:
             self.cartao,
             text=texto,
             anchor="w",
-            font=tema.fonte(14),
+            font=tema.fonte(tema.TAM_PEQUENO),
             text_color=tema.COR_TEXTO_SECUNDARIO
         )
 
@@ -100,9 +100,9 @@ class ConversorMoedasView:
             self.cartao,
             text=TEXTO_PADRAO,
             width=tema.LARGURA_CAMPO,
-            height=72,
+            height=tema.ALTURA_RESULTADO,
             wraplength=tema.LARGURA_CAMPO,
-            font=tema.fonte(16),
+            font=tema.fonte(tema.TAM_TEXTO),
             text_color=tema.COR_TEXTO_SECUNDARIO
         )
 
@@ -137,9 +137,9 @@ class ConversorMoedasView:
     def mostrar_resultado(self, texto):
         # Erro: fonte menor e vermelha. Resultado: fonte grande e branca.
         if texto.startswith("Erro"):
-            self.label_resultado.configure(text=texto, text_color=tema.COR_ERRO, font=tema.fonte(16))
+            self.label_resultado.configure(text=texto, text_color=tema.COR_ERRO, font=tema.fonte(tema.TAM_TEXTO))
         else:
-            self.label_resultado.configure(text=texto, text_color=tema.COR_TEXTO, font=tema.fonte(24, "bold"))
+            self.label_resultado.configure(text=texto, text_color=tema.COR_TEXTO, font=tema.fonte(tema.TAM_GRANDE, "bold"))
 
 
     def fazer_conversao(self):
@@ -191,7 +191,7 @@ class ConversorMoedasView:
         self.label_resultado.configure(
             text=TEXTO_PADRAO,
             text_color=tema.COR_TEXTO_SECUNDARIO,
-            font=tema.fonte(16)
+            font=tema.fonte(tema.TAM_TEXTO)
         )
 
         self.entrada.focus()
@@ -218,7 +218,7 @@ class ConversorMoedasView:
             text=f"Não foi possível obter as cotações das moedas: {erro_cotacoes}",
             wraplength=tema.LARGURA_CAMPO,
             justify="center",
-            font=tema.fonte(14),
+            font=tema.fonte(tema.TAM_PEQUENO),
             text_color=tema.COR_ERRO
         )
         self.label_erro.grid(row=1, column=0, padx=24, pady=12)
