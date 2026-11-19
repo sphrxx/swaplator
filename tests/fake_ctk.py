@@ -37,6 +37,11 @@ class Fake:
     def grid_rowconfigure(self, *args, **kwargs):
         pass
 
+    def _create_grid(self):
+        # Imita o CTkButton real: ele reserva `corner_radius` de largura nas
+        # colunas das pontas (0 e 4). É isso que deixa os botões ovais.
+        self.grid_columnconfigure((0, 4), minsize=self.opcoes.get("corner_radius", 0))
+
     def winfo_children(self):
         return list(self.filhos)
 

@@ -30,6 +30,10 @@ RAIO_CARTAO = 16
 ESPACO = 8
 ALTURA_CONTROLE = 44    # altura de campos e botões "compactos" dos conversores
 LARGURA_CAMPO = 360     # largura dos campos dentro do cartão dos conversores
+
+# A animação de clique do CustomTkinter dura ~100 ms depois do comando do botão.
+# Reconstruir uma tela (destruir widgets) só é seguro depois disso.
+TEMPO_ANIMACAO_CLIQUE = 150
 LARGURA_SELETOR_TIPO = 180  # largura do seletor de tipo de conversão
 TAMANHO_ICONE = 22          # lado (em pixels) dos ícones dos tipos
 

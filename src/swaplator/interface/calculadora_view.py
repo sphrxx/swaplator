@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from swaplator.interface import tema
+from swaplator.interface.componentes import BotaoRedondo, executar_depois_do_clique
 from swaplator.interface.seletor_tipo import SeletorTipo, ROTULOS_TIPOS
 from swaplator.conversores.registro import CONVERSOES, converter_por_tipo
 from swaplator.calculadora.calculadora import Calculadora
@@ -68,7 +69,7 @@ class CalculadoraView:
 
 
     def criar_botao(self, texto, tipo, linha, coluna, comando, colunas=1):
-        botao = ctk.CTkButton(
+        botao = BotaoRedondo(
             self.frame_botoes,
             text=texto,
             width=tema.TAMANHO_BOTAO,
@@ -76,8 +77,6 @@ class CalculadoraView:
             command=comando,
             **tema.estilo_botao(tipo)
         )
-
-        botao.grid_columnconfigure((0, 4), minsize=0)
 
         botao.grid(
             row=linha,
@@ -262,7 +261,10 @@ class CalculadoraView:
 
 
     def selecionar_modo(self, nome_exibido):
-        self.mudar_modo(MODOS_INVERSO[nome_exibido])
+        # Este método é o comando do seletor de modo, e a troca de modo destrói
+        # esse mesmo seletor. Esperamos o clique terminar antes de reconstruir.
+        modo = MODOS_INVERSO[nome_exibido]
+        executar_depois_do_clique(self.frame, lambda: self.mudar_modo(modo))
 
 
     def mudar_modo(self, modo):

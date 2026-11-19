@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from swaplator.interface import tema
+from swaplator.interface.componentes import executar_depois_do_clique
 
 
 TEXTO_PADRAO = "O resultado aparecerá aqui."
@@ -233,6 +234,10 @@ class ConversorMoedasView:
 
 
     def retry_cotacoes(self):
+        # O botão continua na tela por um instante (veja executar_depois_do_clique).
+        # Desativado, um segundo clique é ignorado e não repete a busca.
+        self.button_retry.configure(state="disabled")
+
         try:
             self.cotacoes = self.obter_cotacoes()
 
@@ -240,12 +245,18 @@ class ConversorMoedasView:
             self.cotacoes = None
             self.erro_cotacoes = erro
 
+        # Este método é o comando do botão "Tentar novamente", e reconstruir a
+        # tela destrói esse mesmo botão. Esperamos o clique terminar antes.
+        executar_depois_do_clique(self.frame, self.reconstruir_tela)
+
+
+    def reconstruir_tela(self):
+        self.limpar_frame()
+
         if self.cotacoes is None:
-            self.limpar_frame()
             self.criar_tela_erro(self.erro_cotacoes)
 
         else:
-            self.limpar_frame()
             self.criar_widgets()
             self.configurar_layout()
             self.configuracoes_adicionais()
