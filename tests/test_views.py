@@ -53,6 +53,25 @@ class TestCalculadoraView(unittest.TestCase):
 
         self.assertEqual(self.display(), "100.0 °C = 212.0 °F")
 
+    def test_escolher_tipo_no_seletor_atualiza_unidades_e_converte(self):
+        self.view.mudar_modo("conversao")
+        self.view.combobox_tipo_conversao.escolher("temperatura")
+        self.apertar("1", "0", "0", "=")
+
+        self.assertEqual(self.display(), "100.0 °C = 212.0 °F")
+
+    def test_trocar_de_modo_com_lista_aberta_nao_deixa_lista_orfa(self):
+        janela = self.view.frame.winfo_toplevel()
+        self.view.mudar_modo("conversao")
+        seletor = self.view.combobox_tipo_conversao
+        seletor.abrir()
+        lista = seletor._lista
+        self.assertIn(lista, janela.filhos)
+
+        self.view.mudar_modo("calculo")
+
+        self.assertNotIn(lista, janela.filhos)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -30,6 +30,8 @@ RAIO_CARTAO = 16
 ESPACO = 8
 ALTURA_CONTROLE = 44    # altura de campos e botões "compactos" dos conversores
 LARGURA_CAMPO = 360     # largura dos campos dentro do cartão dos conversores
+LARGURA_SELETOR_TIPO = 180  # largura do seletor de tipo de conversão
+TAMANHO_ICONE = 22          # lado (em pixels) dos ícones dos tipos
 
 FONTE_FAMILIA = "Segoe UI"
 

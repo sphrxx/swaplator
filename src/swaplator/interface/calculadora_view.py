@@ -1,6 +1,7 @@
 import customtkinter as ctk
 
 from swaplator.interface import tema
+from swaplator.interface.seletor_tipo import SeletorTipo, ROTULOS_TIPOS
 from swaplator.conversores.registro import CONVERSOES, converter_por_tipo
 from swaplator.calculadora.calculadora import Calculadora
 
@@ -126,12 +127,13 @@ class CalculadoraView:
 
     def criar_widgets_conversao(self):
         self.frame_comboboxes_conversao = ctk.CTkFrame(self.frame, fg_color="transparent")
-        self.combobox_tipo_conversao = ctk.CTkComboBox(
+        # Seletor com ícones no lugar da combobox; mantém o mesmo nome e a
+        # mesma interface (get/set/command), então o resto do código não muda.
+        self.combobox_tipo_conversao = SeletorTipo(
             self.frame_comboboxes_conversao,
-            values=list(CONVERSOES),
+            opcoes={tipo: ROTULOS_TIPOS.get(tipo, tipo.capitalize())
+                    for tipo in CONVERSOES},
             command=self.atualizar_unidades,
-            width=160,
-            **tema.estilo_combobox()
         )
 
         unidades = self.extrair_unidades(self.combobox_tipo_conversao.get())

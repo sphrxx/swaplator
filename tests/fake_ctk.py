@@ -17,6 +17,9 @@ class Fake:
         self.opcoes = dict(kwargs)
         self.filhos = []
         self.valor = None
+        self.colunas = {}       # coluna -> opções de grid_columnconfigure
+        self.binds = []         # (sequência, id) de cada bind feito
+        self.unbinds = []       # (sequência, id) de cada unbind feito
 
         if isinstance(master, Fake):
             master.filhos.append(self)
@@ -27,8 +30,9 @@ class Fake:
     def grid(self, *args, **kwargs):
         self.opcoes_grid = kwargs
 
-    def grid_columnconfigure(self, *args, **kwargs):
-        pass
+    def grid_columnconfigure(self, coluna, **kwargs):
+        # Anota para o teste conferir (ex.: o minsize da lista).
+        self.colunas.setdefault(coluna, {}).update(kwargs)
 
     def grid_rowconfigure(self, *args, **kwargs):
         pass
@@ -40,6 +44,11 @@ class Fake:
         return True
 
     def destroy(self):
+        # Como o Tk: destrói os filhos primeiro (cópia da lista, pois cada
+        # filho se remove dela), depois a si mesmo.
+        for filho in list(self.filhos):
+            filho.destroy()
+
         if isinstance(self.master, Fake) and self in self.master.filhos:
             self.master.filhos.remove(self)
 
@@ -59,13 +68,92 @@ class Fake:
     def focus(self):
         pass
 
-    def bind(self, *args):
+    def bind(self, *args, **kwargs):
+        # Devolve um id diferente a cada bind, como o Tk faz com add="+".
+        id_do_bind = f"id-{len(self.binds)}"
+        self.binds.append((args[0], id_do_bind))
+        return id_do_bind
+
+    def unbind(self, sequencia, id_do_bind=None):
+        self.unbinds.append((sequencia, id_do_bind))
+
+    def winfo_pointerxy(self):
+        return (-1, -1)  # mouse longe de tudo
+
+    def place(self, **kwargs):
+        self.opcoes_place = kwargs
+
+    def place_forget(self):
+        self.opcoes_place = None
+
+    def lift(self):
         pass
+
+    def grid_propagate(self, *args):
+        pass
+
+    def winfo_toplevel(self):
+        # Sobe a cadeia de `master` até a raiz, como o Tk.
+        raiz = self
+        while isinstance(raiz.master, Fake):
+            raiz = raiz.master
+        return raiz
+
+    def winfo_rootx(self):
+        return 0
+
+    def winfo_rooty(self):
+        return 0
+
+    def winfo_width(self):
+        return 0
+
+    def winfo_height(self):
+        return 0
+
+    def after_idle(self, funcao, *args):
+        funcao(*args)
 
     def after(self, milissegundos, funcao=None, *args):
         # Sem relógio de verdade: executa na hora.
         if funcao is not None:
             funcao(*args)
+
+
+class FakeCanvas(Fake):
+    """Um canvas de mentira: em vez de desenhar, anota o que foi pedido.
+
+    Cada chamada `create_*` guarda `(nome, coordenadas, opcoes)` em
+    `desenhos`, e o teste confere formas, posições e cores.
+    """
+
+    def __init__(self, master=None, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.desenhos = []
+
+    def _desenhar(self, nome, coords, opcoes):
+        self.desenhos.append((nome, coords, opcoes))
+        return 0
+
+    def create_line(self, *coords, **opcoes):
+        return self._desenhar("line", coords, opcoes)
+
+    def create_rectangle(self, *coords, **opcoes):
+        return self._desenhar("rectangle", coords, opcoes)
+
+    def create_oval(self, *coords, **opcoes):
+        return self._desenhar("oval", coords, opcoes)
+
+    def create_polygon(self, *coords, **opcoes):
+        return self._desenhar("polygon", coords, opcoes)
+
+    def create_arc(self, *coords, **opcoes):
+        return self._desenhar("arc", coords, opcoes)
+
+    def delete(self, *args):
+        if args == ("all",):
+            self.desenhos.clear()
+        super().delete(*args)
 
 
 NOMES_DOS_WIDGETS = (
@@ -88,6 +176,8 @@ def instalar():
     modulo = types.ModuleType("customtkinter")
     for nome in NOMES_DOS_WIDGETS:
         setattr(modulo, nome, Fake)
+
+    modulo.CTkCanvas = FakeCanvas
 
     sys.modules["customtkinter"] = modulo
 
