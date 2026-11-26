@@ -20,6 +20,7 @@ class Fake:
         self.colunas = {}       # coluna -> opções de grid_columnconfigure
         self.binds = []         # (sequência, id) de cada bind feito
         self.unbinds = []       # (sequência, id) de cada unbind feito
+        self._last_geometry_manager_call = None
 
         if isinstance(master, Fake):
             master.filhos.append(self)
@@ -29,6 +30,19 @@ class Fake:
 
     def grid(self, *args, **kwargs):
         self.opcoes_grid = kwargs
+        self.grid_removido = False
+        # O CTk guarda o último grid() e o refaz quando a escala da tela muda.
+        self._last_geometry_manager_call = {"function": self.grid, "kwargs": kwargs}
+
+    def grid_remove(self):
+        # Como o Tk: esconde o widget mas lembra a posição para um grid() futuro.
+        # (O CTk NÃO apaga o registro de geometria aqui: é a armadilha.)
+        self.grid_removido = True
+
+    def grid_forget(self):
+        # Como o CTk: esconde e esquece o registro de geometria.
+        self.grid_removido = True
+        self._last_geometry_manager_call = None
 
     def grid_columnconfigure(self, coluna, **kwargs):
         # Anota para o teste conferir (ex.: o minsize da lista).

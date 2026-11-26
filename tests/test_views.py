@@ -8,8 +8,8 @@ def setUpModule():
     # precisa estar instalado antes do import.
     fake_ctk.instalar()
 
-    global CalculadoraView, tema
-    from swaplator.interface.calculadora_view import CalculadoraView
+    global CalculadoraView, SIMBOLOS, tema
+    from swaplator.interface.calculadora_view import CalculadoraView, SIMBOLOS
     from swaplator.interface import tema
 
 
@@ -17,184 +17,312 @@ def tearDownModule():
     fake_ctk.remover()
 
 
-class TestCalculadoraView(unittest.TestCase):
+class ViewBase(unittest.TestCase):
 
     def setUp(self):
         self.view = CalculadoraView(fake_ctk.Fake())
 
     def apertar(self, *textos):
+        # Os operadores aparecem como ÷ × − +, mas aqui escrevemos / * - +.
         for texto in textos:
-            botao = fake_ctk.achar_botao(self.view.frame, texto)
+            botao = fake_ctk.achar_botao(self.view.frame_botoes,
+                                         SIMBOLOS.get(texto, texto))
             botao.opcoes["command"]()
 
-    def display(self):
-        return self.view.display.opcoes["text"]
+    def topo(self):
+        return self.view.display.label_entrada.opcoes["text"]
 
-    def test_igual_calcula_no_modo_calculadora(self):
-        self.apertar("7", "+", "3", "=")
+    def baixo(self):
+        return self.view.display.label_resultado.opcoes["text"]
 
-        self.assertEqual(self.display(), "10.0")
+
+class TestCalculadoraConversora(ViewBase):
+
+    def test_abre_como_conversora_de_comprimento(self):
+        self.assertFalse(hasattr(self.view, "seletor_modo"))
+        self.assertEqual(self.view.tipo_conversao, "comprimento")
+        self.assertEqual(self.view.combobox_unidade_inicial.get(), "mm")
+        self.assertEqual(self.view.combobox_unidade_final.get(), "cm")
+        self.assertEqual(self.view.label_tipo.opcoes["text"], "Comprimento")
+
+    def test_cabecalho_tem_o_botao_de_tipos(self):
+        self.assertEqual(self.view.button_tipos.opcoes["text"], "⊞ Tipos")
+
+    def test_converte_enquanto_digita(self):
+        self.apertar("1", "0")
+        self.assertEqual((self.topo(), self.baixo()), ("10", "1"))
+
+        self.apertar("0")
+        self.assertEqual((self.topo(), self.baixo()), ("100", "10"))
+
+    def test_operador_pendente_e_igual(self):
+        self.apertar("7", "+")
+        self.assertEqual((self.topo(), self.baixo()), ("7 +", "0.7"))
+
+        self.apertar("3")
+        self.assertEqual((self.topo(), self.baixo()), ("7 + 3", "0.3"))
+
+        self.apertar("=")
+        self.assertEqual((self.topo(), self.baixo()), ("10", "1"))
+
+    def test_divisao_mostra_resultado_sem_ruido(self):
+        self.apertar("1", "0", "/", "4", "=")
+
+        self.assertEqual(self.topo(), "2.5")
 
     def test_ponto_duplicado_e_ignorado(self):
         self.apertar("1", ".", ".")
 
-        self.assertEqual(self.display(), "1.")
+        self.assertEqual((self.topo(), self.baixo()), ("1.", "0.1"))
 
-    def test_conversao_de_comprimento_continua_funcionando(self):
-        self.view.mudar_modo("conversao")
-        self.apertar("1", "=")
+    def test_numero_digitado_aparece_como_digitado(self):
+        self.apertar("1", ".", "0", "5")
 
-        self.assertEqual(self.display(), "1.0 mm = 0.1 cm")
+        self.assertEqual(self.topo(), "1.05")
 
-    def test_conversao_de_temperatura(self):
-        self.view.mudar_modo("conversao")
-        self.view.combobox_tipo_conversao.set("temperatura")
-        self.view.atualizar_unidades("temperatura")
-        self.apertar("1", "0", "0", "=")
+    def test_limpar_zera_as_duas_linhas(self):
+        self.apertar("5", "C")
 
-        self.assertEqual(self.display(), "100.0 °C = 212.0 °F")
+        self.assertEqual((self.topo(), self.baixo()), ("0", "0"))
 
-    def test_escolher_tipo_no_seletor_atualiza_unidades_e_converte(self):
-        self.view.mudar_modo("conversao")
-        self.view.combobox_tipo_conversao.escolher("temperatura")
-        self.apertar("1", "0", "0", "=")
+    def test_trocar_unidade_reconverte(self):
+        self.apertar("1")
 
-        self.assertEqual(self.display(), "100.0 °C = 212.0 °F")
+        self.view.display.combobox_unidade_final.set("m")
+        self.view.display.combobox_unidade_final.opcoes["command"]("m")
 
-    def test_trocar_de_modo_com_lista_aberta_nao_deixa_lista_orfa(self):
-        janela = self.view.frame.winfo_toplevel()
-        self.view.mudar_modo("conversao")
-        seletor = self.view.combobox_tipo_conversao
-        seletor.abrir()
-        lista = seletor._lista
-        self.assertIn(lista, janela.filhos)
+        self.assertEqual(self.baixo(), "0.001")
 
-        self.view.mudar_modo("calculo")
+    def test_unidade_inexistente_mostra_traco(self):
+        self.apertar("1")
 
-        self.assertNotIn(lista, janela.filhos)
+        self.view.display.combobox_unidade_final.set("xx")
+        self.view.display.combobox_unidade_final.opcoes["command"]("xx")
+
+        self.assertEqual(self.baixo(), "—")
+
+    def test_escolher_tipo_troca_unidades_e_mantem_o_numero(self):
+        self.apertar("1", "0", "0")
+
+        self.view.escolher_tipo("temperatura")
+
+        self.assertEqual(self.view.combobox_unidade_inicial.get(), "°C")
+        self.assertEqual(self.view.combobox_unidade_final.get(), "°F")
+        self.assertEqual((self.topo(), self.baixo()), ("100", "212"))
+        self.assertEqual(self.view.label_tipo.opcoes["text"], "Temperatura")
+
+    def test_escolher_o_tipo_ativo_nao_reseta_unidades(self):
+        self.view.combobox_unidade_inicial.set("km")
+
+        self.view.escolher_tipo("comprimento")
+
+        self.assertEqual(self.view.combobox_unidade_inicial.get(), "km")
+
+    def test_divisao_por_zero_nao_quebra(self):
+        self.apertar("1", "/", "0", "=")   # não deve levantar exceção
+
+    def test_numeros_enormes_usam_notacao_cientifica(self):
+        self.apertar(*"8" * 15, "*", *"8" * 15, "=")
+
+        self.assertIn("e+29", self.topo())
+        self.assertLessEqual(len(self.topo()), 15)
+        self.assertEqual(
+            self.view.display.label_entrada.opcoes["font"],
+            tema.fonte(tema.tamanho_fonte_display(self.topo())))
 
 
-class TestMenusDasUnidadesComALista(unittest.TestCase):
-    """O menu de uma combobox é uma janelinha própria, sempre acima de tudo:
-    se ficasse aberto, taparia a lista de tipos."""
+class TestAparenciaDaCalculadora(ViewBase):
+
+    def test_fonte_do_display_diminui_para_numero_longo(self):
+        self.apertar(*"1234567891234567")   # 16 dígitos, sem zero
+
+        self.assertEqual(self.view.display.label_entrada.opcoes["font"],
+                         tema.fonte(tema.tamanho_fonte_display(self.topo())))
+        self.assertLess(tema.tamanho_fonte_display(self.topo()), tema.TAM_DISPLAY)
+
+    def test_fonte_do_display_e_grande_para_numero_curto(self):
+        self.apertar("7")
+
+        self.assertEqual(self.view.display.label_entrada.opcoes["font"],
+                         tema.fonte(tema.TAM_DISPLAY))
+
+    def test_zero_e_limpar_ocupam_varias_colunas(self):
+        zero = fake_ctk.achar_botao(self.view.frame_botoes, "0")
+        limpar = fake_ctk.achar_botao(self.view.frame_botoes, "C")
+
+        self.assertEqual(zero.opcoes_grid["columnspan"], 2)
+        self.assertEqual(limpar.opcoes_grid["columnspan"], 3)
+
+    def test_cabecalho_tem_altura_do_tema(self):
+        self.assertEqual(self.view.cabecalho.opcoes["height"], tema.ALTURA_CABECALHO)
+
+    def test_display_fica_entre_o_cabecalho_e_o_teclado(self):
+        linhas = (self.view.cabecalho.opcoes_grid["row"],
+                  self.view.display.frame.opcoes_grid["row"],
+                  self.view.frame_botoes.opcoes_grid["row"])
+
+        self.assertEqual(linhas, (0, 1, 2))
+
+
+class TestPainelDeTipos(unittest.TestCase):
+
+    def setUp(self):
+        self.janela = fake_ctk.Fake()
+        self.view = CalculadoraView(self.janela)
+
+    def abrir(self):
+        self.view.button_tipos.opcoes["command"]()
+
+    def test_painel_comeca_fechado_e_escondido(self):
+        self.assertFalse(self.view.painel_aberto)
+        self.assertFalse(self.view.painel_tipos.visivel)
+        self.assertTrue(self.view.painel_tipos.grid_removido)
+        self.assertFalse(self.view.frame_botoes.grid_removido)
+
+    def test_botao_tipos_abre_o_painel_no_lugar_do_teclado(self):
+        self.abrir()
+
+        self.assertTrue(self.view.painel_aberto)
+        self.assertTrue(self.view.painel_tipos.visivel)
+        self.assertTrue(self.view.display.frame.grid_removido)
+        self.assertTrue(self.view.frame_botoes.grid_removido)
+        self.assertEqual(self.view.button_tipos.opcoes["text"], "Voltar")
+
+    def test_botao_de_novo_volta_ao_teclado(self):
+        self.abrir()
+        self.abrir()
+
+        self.assertFalse(self.view.painel_aberto)
+        self.assertFalse(self.view.painel_tipos.visivel)
+        self.assertFalse(self.view.display.frame.grid_removido)
+        self.assertFalse(self.view.frame_botoes.grid_removido)
+        self.assertEqual(self.view.button_tipos.opcoes["text"], "⊞ Tipos")
+
+    def test_escolher_no_painel_troca_o_tipo_e_fecha(self):
+        self.abrir()
+
+        self.view.painel_tipos.escolher("massa")
+
+        self.assertEqual(self.view.tipo_conversao, "massa")
+        self.assertFalse(self.view.painel_aberto)
+        self.assertEqual(self.view.label_tipo.opcoes["text"], "Massa")
+        from swaplator.conversores.registro import CONVERSOES
+        primeira = list(CONVERSOES["massa"][1])[0]
+        self.assertEqual(self.view.combobox_unidade_inicial.get(), primeira)
+
+    def test_escolher_o_tipo_ativo_so_fecha_o_painel(self):
+        self.view.combobox_unidade_inicial.set("km")
+        self.abrir()
+
+        self.view.painel_tipos.escolher("comprimento")
+
+        self.assertFalse(self.view.painel_aberto)
+        self.assertEqual(self.view.combobox_unidade_inicial.get(), "km")
+
+    def test_esc_fecha_o_painel(self):
+        self.abrir()
+
+        self.view.painel_tipos._ao_esc()
+
+        self.assertFalse(self.view.painel_aberto)
+        self.assertFalse(self.view.frame_botoes.grid_removido)
+
+    def test_painel_marca_o_tipo_ativo(self):
+        self.view.escolher_tipo("area")
+
+        tile = self.view.painel_tipos.tiles["area"]
+        self.assertEqual(tile.opcoes["fg_color"], tema.COR_DESTAQUE)
+
+    def test_painel_ocupa_o_lugar_do_display_e_do_teclado(self):
+        grade = self.view.painel_tipos.opcoes_grid
+
+        self.assertEqual((grade["row"], grade["rowspan"]), (1, 2))
+
+    def test_destruir_a_tela_com_o_painel_aberto_libera_os_binds(self):
+        self.abrir()
+        sequencias = {seq for seq, _ in self.janela.binds}
+
+        self.view.frame.destroy()
+
+        self.assertEqual({seq for seq, _ in self.janela.unbinds}, sequencias)
+        self.assertEqual(len(sequencias), 6)
+
+
+class TestEscalaDaTelaComPainel(unittest.TestCase):
+    """O CTk refaz o último grid() de cada widget quando a escala da tela muda.
+    Widgets escondidos não podem deixar esse registro para trás, senão voltam
+    à tela sozinhos (e o painel reapareceria por cima do teclado)."""
 
     def setUp(self):
         self.view = CalculadoraView(fake_ctk.Fake())
-        self.view.mudar_modo("conversao")
 
-    def _menu_aberto_em(self, combobox):
-        fechado = []
-        menu = fake_ctk.Fake()
-        menu.close = lambda: fechado.append(True)
-        combobox._dropdown_menu = menu
-        combobox._close_on_next_click = True
-        return fechado
+    def test_painel_fechado_nao_deixa_registro_de_geometria(self):
+        self.assertIsNone(self.view.painel_tipos._last_geometry_manager_call)
 
-    def test_abrir_a_lista_fecha_o_menu_das_duas_unidades(self):
-        inicial = self.view.combobox_unidade_inicial
-        final = self.view.combobox_unidade_final
-        fechou_inicial = self._menu_aberto_em(inicial)
-        fechou_final = self._menu_aberto_em(final)
+    def test_painel_aberto_esconde_display_e_teclado_sem_registro(self):
+        self.view.abrir_painel()
 
-        self.view.combobox_tipo_conversao.abrir()
+        self.assertIsNone(self.view.display.frame._last_geometry_manager_call)
+        self.assertIsNone(self.view.frame_botoes._last_geometry_manager_call)
 
-        self.assertEqual(fechou_inicial, [True])
-        self.assertEqual(fechou_final, [True])
-        # Senão o próximo clique na combobox "fecharia" um menu já fechado
-        # em vez de abrir o dela.
-        self.assertFalse(inicial._close_on_next_click)
-        self.assertFalse(final._close_on_next_click)
+    def test_fechar_devolve_display_e_teclado_com_o_mesmo_espacamento(self):
+        antes = dict(self.view.frame_botoes._last_geometry_manager_call["kwargs"])
 
-    def test_combobox_sem_menu_interno_nao_quebra_a_abertura(self):
-        # O Fake não tem _dropdown_menu: simula uma versão do CTk diferente.
-        self.view.combobox_tipo_conversao.abrir()
+        self.view.abrir_painel()
+        self.view.fechar_painel()
 
-        self.assertTrue(self.view.combobox_tipo_conversao.esta_aberto)
+        self.assertEqual(
+            self.view.frame_botoes._last_geometry_manager_call["kwargs"], antes)
+        self.assertIn("pady", antes)
+
+    def test_reabrir_o_painel_usa_a_mesma_posicao(self):
+        self.view.abrir_painel()
+
+        grade = self.view.painel_tipos._last_geometry_manager_call["kwargs"]
+        self.assertEqual((grade["row"], grade["rowspan"]), (1, 2))
 
 
-class TestAparenciaDaCalculadora(unittest.TestCase):
-
-    def setUp(self):
-        self.view = CalculadoraView(fake_ctk.Fake())
-
-    def test_fonte_do_visor_diminui_para_numeros_longos(self):
-        for digito in "1234567891234567":   # 16 dígitos, sem zero (o visor também é "0")
-            fake_ctk.achar_botao(self.view.frame_botoes, digito).opcoes["command"]()
-
-        self.assertEqual(self.view.display.opcoes["font"], tema.fonte(tema.TAM_GRANDE))
-
-    def test_fonte_do_visor_e_grande_para_numeros_curtos(self):
-        fake_ctk.achar_botao(self.view.frame_botoes, "7").opcoes["command"]()
-
-        self.assertEqual(self.view.display.opcoes["font"], tema.fonte(tema.TAM_DISPLAY))
-
-    def test_controles_da_linha_de_conversao_tem_a_mesma_altura(self):
-        self.view.mudar_modo("conversao")
-        controles = (
-            self.view.combobox_tipo_conversao,
-            self.view.combobox_unidade_inicial,
-            self.view.combobox_unidade_final,
-        )
-
-        for controle in controles:
-            self.assertEqual(controle.opcoes["height"], tema.ALTURA_CONTROLE)
-
-    def test_caixas_de_unidade_sao_estreitas_para_caber_na_janela_minima(self):
-        self.view.mudar_modo("conversao")
-
-        for caixa in (self.view.combobox_unidade_inicial, self.view.combobox_unidade_final):
-            self.assertEqual(caixa.opcoes["width"], tema.LARGURA_COMBOBOX_UNIDADE)
-
-    def test_linha_de_conversao_cabe_na_largura_minima_da_janela(self):
-        # Largura da linha (seletor + 2 caixas + 3x2x4 de espaço + 10 de borda),
-        # mais bordas da tela (20 + 16) e da barra lateral (~220).
-        linha = tema.LARGURA_SELETOR_TIPO + 2 * tema.LARGURA_COMBOBOX_UNIDADE + 24 + 10
-        necessario = linha + 20 + 16 + 220
-
-        self.assertLessEqual(necessario, tema.JANELA_LARGURA_MINIMA)
-
-
-class TestTrocaDeModoAdiada(unittest.TestCase):
-    """O seletor de modo é destruído pela própria troca de modo.
-
-    Por isso a reconstrução precisa esperar o clique terminar (a animação
-    do botão roda até ~100 ms depois do comando).
-    """
+class TestCliqueDuploNoTile(unittest.TestCase):
+    """O painel fecha no primeiro clique; o segundo clique do duplo-clique cairia
+    no botão do teclado que está debaixo do tile."""
 
     def setUp(self):
         self.janela = fake_ctk.Fake()
         self.agendados = []
-
-        # A janela guarda o que foi agendado, em vez de esperar o relógio.
         self.janela.after = lambda ms, funcao=None, *args: self.agendados.append(funcao)
-
         self.view = CalculadoraView(self.janela)
 
-    def test_selecionar_modo_nao_reconstroi_dentro_do_proprio_clique(self):
-        seletor_modo = self.view.seletor_modo
+    def apertar(self, texto):
+        fake_ctk.achar_botao(self.view.frame_botoes, SIMBOLOS.get(texto, texto)).opcoes["command"]()
 
-        self.view.selecionar_modo("Conversor")
+    def test_teclado_ignora_cliques_logo_depois_de_escolher_no_painel(self):
+        self.apertar("5")
+        self.view.abrir_painel()
+        self.view.painel_tipos.escolher("massa")
 
-        self.assertEqual(self.view.modo, "calculo")
-        self.assertIn(seletor_modo, self.view.frame.filhos)
-        self.assertEqual(len(self.agendados), 1)
+        self.apertar("C")   # o "segundo clique"
 
-    def test_modo_muda_quando_o_tempo_passa(self):
-        seletor_modo_antigo = self.view.seletor_modo
+        self.assertEqual(self.view.display.label_entrada.opcoes["text"], "5")
 
-        self.view.selecionar_modo("Conversor")
-        self.agendados[0]()
+    def test_teclado_volta_a_funcionar_depois_do_intervalo(self):
+        self.apertar("5")
+        self.view.abrir_painel()
+        self.view.painel_tipos.escolher("massa")
 
-        self.assertEqual(self.view.modo, "conversao")
-        self.assertNotIn(seletor_modo_antigo, self.view.frame.filhos)
+        for funcao in self.agendados:
+            funcao()
+        self.apertar("C")
 
-    def test_nao_muda_o_modo_se_a_tela_ja_foi_destruida(self):
-        self.view.selecionar_modo("Conversor")
-        self.view.frame.winfo_exists = lambda: False
+        self.assertEqual(self.view.display.label_entrada.opcoes["text"], "0")
 
-        self.agendados[0]()
+    def test_voltar_pelo_botao_nao_trava_o_teclado(self):
+        self.apertar("5")
+        self.view.abrir_painel()
+        self.view.fechar_painel()
 
-        self.assertEqual(self.view.modo, "calculo")
+        self.apertar("C")
+
+        self.assertEqual(self.view.display.label_entrada.opcoes["text"], "0")
 
 
 class TestBotoesRedondosDaCalculadora(unittest.TestCase):
@@ -204,7 +332,6 @@ class TestBotoesRedondosDaCalculadora(unittest.TestCase):
 
         view = CalculadoraView(fake_ctk.Fake())
 
-        # Procura só no quadro dos botões: o visor também tem o texto "0".
         for texto in ("7", "0", ".", "C", "=", "÷"):
             botao = fake_ctk.achar_botao(view.frame_botoes, texto)
             self.assertIsInstance(botao, BotaoRedondo, texto)

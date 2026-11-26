@@ -20,6 +20,17 @@ class TestIcones(unittest.TestCase):
         for tipo in CONVERSOES:
             self.assertIn(tipo, ICONES)
 
+    def test_menu_lateral_tem_icones_de_calculadora_e_moedas(self):
+        self.assertIn("calculadora", ICONES)
+        self.assertIn("moedas", ICONES)
+
+    def test_novos_icones_desenham_varias_formas(self):
+        for chave in ("calculadora", "moedas"):
+            canvas = FakeCanvas()
+            ICONES[chave](canvas, 24, "#FFFFFF")
+
+            self.assertGreaterEqual(len(canvas.desenhos), 3, chave)
+
     def test_cada_icone_desenha_formas_dentro_do_quadrado(self):
         funcoes = list(ICONES.values()) + [desenhar_seta]
 

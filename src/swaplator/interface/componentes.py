@@ -41,3 +41,25 @@ def executar_depois_do_clique(widget, funcao):
             funcao()
 
     widget.winfo_toplevel().after(tema.TEMPO_ANIMACAO_CLIQUE, executar)
+
+
+
+def esconder_grid(widget):
+    """Esconde um widget da grade, lembrando onde ele estava.
+
+    O `grid_remove()` do Tk não serve aqui: o CustomTkinter guarda o último
+    `grid()` de cada widget e o refaz quando a escala da tela muda (ao
+    arrastar a janela para outro monitor, por exemplo), o que traria de volta
+    um widget que deveria estar escondido. O `grid_forget()` do CTk apaga esse
+    registro; por isso guardamos as opções antes, para `mostrar_grid`.
+    """
+    chamada = getattr(widget, "_last_geometry_manager_call", None)
+    if chamada is not None:
+        widget._opcoes_grid_guardadas = dict(chamada["kwargs"])
+
+    widget.grid_forget()
+
+
+def mostrar_grid(widget):
+    """Devolve à grade um widget escondido por `esconder_grid`, na mesma posição."""
+    widget.grid(**getattr(widget, "_opcoes_grid_guardadas", {}))

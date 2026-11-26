@@ -35,6 +35,12 @@ LARGURA_SELETOR_TIPO = 180        # largura do seletor de tipo de conversão
 LARGURA_COMBOBOX_UNIDADE = 110    # caixas de unidade do Conversor (a maior é "fl oz")
 ALTURA_RESULTADO = 104            # reserva 3 linhas do resultado (o rótulo só tem altura mínima)
 TAMANHO_ICONE = 22                # lado (em pixels) dos ícones dos tipos
+TAMANHO_ICONE_PAINEL = 40          # lado (em pixels) dos ícones grandes do painel de tipos
+LARGURA_ITEM_SIDEBAR = 180        # largura de cada item do menu lateral
+TEMPO_IGNORAR_CLIQUE = 300         # ms em que o teclado ignora cliques após escolher um tipo
+ALTURA_CABECALHO = 52              # faixa do topo da calculadora (nome do tipo + botão "Tipos")
+LARGURA_BOTAO_TIPOS = 120         # botão "⊞ Tipos" do cabeçalho
+ALTURA_LINHA_DISPLAY = 64         # cada linha do display (fixa: o layout não pula ao digitar)
 
 # A animação de clique do CustomTkinter dura ~100 ms depois do comando do botão.
 # Reconstruir uma tela (destruir widgets) só é seguro depois disso.
@@ -45,7 +51,7 @@ TEMPO_ANIMACAO_CLIQUE = 150
 JANELA_LARGURA_INICIAL = 960
 JANELA_ALTURA_INICIAL = 760
 JANELA_LARGURA_MINIMA = 720   # barra lateral (~220) + linha mais larga do Conversor (~470)
-JANELA_ALTURA_MINIMA = 660    # a calculadora no modo Conversor precisa de ~610
+JANELA_ALTURA_MINIMA = 660    # a calculadora conversora (cabeçalho + display + teclado) precisa de ~640
 MARGEM_TELA = 0.9             # a janela ocupa no máximo 90% da tela (sobra espaço p/ a barra de tarefas)
 
 # --- Fontes -----------------------------------------------------------

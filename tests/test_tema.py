@@ -125,5 +125,19 @@ class TestTema(unittest.TestCase):
         self.assertLessEqual(tema.JANELA_ALTURA_MINIMA, tema.JANELA_ALTURA_INICIAL)
 
 
+    def test_tela_da_calculadora_cabe_na_janela_minima(self):
+        # cabeçalho + display (2 linhas) + teclado (5 linhas de botão com
+        # espaço) + ~60 de margens e respiros.
+        altura = (tema.ALTURA_CABECALHO
+                  + 2 * tema.ALTURA_LINHA_DISPLAY
+                  + 5 * (tema.TAMANHO_BOTAO + tema.ESPACO)
+                  + 60)
+
+        self.assertLessEqual(altura, tema.JANELA_ALTURA_MINIMA)
+
+    def test_item_da_sidebar_usa_a_largura_do_tema(self):
+        self.assertEqual(tema.LARGURA_ITEM_SIDEBAR, 180)
+
+
 if __name__ == "__main__":
     unittest.main()

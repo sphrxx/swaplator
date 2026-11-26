@@ -76,11 +76,38 @@ def desenhar_seta(canvas, tamanho, cor):
     _linha(canvas, k, e, cor, 12, 15, 18, 9)
 
 
-# Chave = mesmo nome usado em CONVERSOES, para achar o ícone pelo tipo.
+def desenhar_calculadora(canvas, tamanho, cor):
+    """Calculadora: o corpo, o visor e as teclas (quatro pontinhos)."""
+    k, e = _escala(tamanho)
+    canvas.create_rectangle(4 * k, 2 * k, 20 * k, 22 * k,
+                            outline=cor, fill="", width=e)
+    canvas.create_rectangle(7 * k, 5 * k, 17 * k, 9 * k,
+                            outline=cor, fill="", width=e)
+
+    # Teclas: pontos 2x2 abaixo do visor (linhas curtas com o traço da espessura).
+    for x in (8, 15):
+        for y in (14, 18):
+            _linha(canvas, k, e, cor, x, y, x + 1, y)
+
+
+def desenhar_moedas(canvas, tamanho, cor):
+    """Moedas: um círculo com outro dentro e uma barra vertical no centro."""
+    k, e = _escala(tamanho)
+    canvas.create_oval(2 * k, 2 * k, 22 * k, 22 * k,
+                       outline=cor, fill="", width=e)
+    canvas.create_oval(6 * k, 6 * k, 18 * k, 18 * k,
+                       outline=cor, fill="", width=e)
+    _linha(canvas, k, e, cor, 12, 8, 12, 16)
+
+
+# Chave = nome usado em CONVERSOES (para achar o ícone pelo tipo) ou o nome
+# de uma tela do menu lateral ("calculadora", "moedas").
 ICONES = {
     "comprimento": desenhar_regua,
     "area": desenhar_area,
     "massa": desenhar_massa,
     "volume": desenhar_volume,
     "temperatura": desenhar_temperatura,
+    "calculadora": desenhar_calculadora,
+    "moedas": desenhar_moedas,
 }

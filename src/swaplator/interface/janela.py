@@ -46,17 +46,12 @@ class Janela:
             self.selecionar_view
         )
 
-        self.sidebar.marcar_ativo("comprimento")
+        self.sidebar.marcar_ativo("calculadora")
 
         self.frame_conteudo = ctk.CTkFrame(self.janela, fg_color=tema.COR_FUNDO)
 
-        funcao_conversao, unidades = CONVERSOES["comprimento"]
-
-        self.view_atual = ConversorView(
-            self.frame_conteudo,
-            funcao_conversao,
-            unidades
-        )
+        # O app abre na calculadora conversora (que começa em Comprimento).
+        self.view_atual = CalculadoraView(self.frame_conteudo)
 
 
     def configurar_layout(self):

@@ -42,5 +42,28 @@ class TestJanela(unittest.TestCase):
         self.assertEqual(janela.geometria, f"864x{tema.JANELA_ALTURA_MINIMA}")
 
 
+class TestTelaInicial(unittest.TestCase):
+
+    def setUp(self):
+        from swaplator.interface.calculadora_view import CalculadoraView
+        self.CalculadoraView = CalculadoraView
+        self.app = Janela()
+
+    def test_abre_na_calculadora(self):
+        self.assertIsInstance(self.app.view_atual, self.CalculadoraView)
+        self.assertTrue(self.app.sidebar.botoes["calculadora"].ativo)
+        self.assertFalse(self.app.sidebar.botoes["comprimento"].ativo)
+
+    def test_trocar_de_tela_libera_o_painel(self):
+        raiz = self.app.janela
+        self.app.view_atual.abrir_painel()
+        sequencias = {seq for seq, _ in raiz.binds}
+
+        self.app.selecionar_view("area")
+
+        self.assertEqual({seq for seq, _ in raiz.unbinds}, sequencias)
+        self.assertEqual(len(sequencias), 6)
+
+
 if __name__ == "__main__":
     unittest.main()

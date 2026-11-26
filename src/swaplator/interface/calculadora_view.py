@@ -1,71 +1,89 @@
 import customtkinter as ctk
 
 from swaplator.interface import tema
-from swaplator.interface.componentes import BotaoRedondo, executar_depois_do_clique
-from swaplator.interface.seletor_tipo import SeletorTipo, ROTULOS_TIPOS
-from swaplator.conversores.registro import CONVERSOES, converter_por_tipo
+from swaplator.interface.componentes import BotaoRedondo, esconder_grid, mostrar_grid
+from swaplator.interface.display_conversao import DisplayConversao
+from swaplator.interface.painel_tipos import PainelTipos
+from swaplator.interface.formato import converter_para_exibir, formatar_numero
+from swaplator.interface.seletor_tipo import ROTULOS_TIPOS
+from swaplator.conversores.registro import CONVERSOES
 from swaplator.calculadora.calculadora import Calculadora
 
-
-# Nomes dos modos como constantes: se alguém digitar um nome errado, o Python
-# avisa na hora (NameError), em vez de a comparação falhar em silêncio.
-MODO_CALCULO = "calculo"
-MODO_CONVERSAO = "conversao"
-
-# Nome interno do modo -> texto exibido no seletor (e o caminho inverso).
-MODOS = {MODO_CALCULO: "Calculadora", MODO_CONVERSAO: "Conversor"}
-MODOS_INVERSO = {nome: modo for modo, nome in MODOS.items()}
 
 # A Calculadora continua recebendo "/", "*", "-", "+". Só o símbolo mostrado muda.
 SIMBOLOS = {"/": "÷", "*": "×", "-": "−", "+": "+"}
 
 
+TEXTO_BOTAO_TIPOS = "⊞ Tipos"
+TEXTO_BOTAO_VOLTAR = "Voltar"
+
+
+def rotulo_do_tipo(tipo):
+    return ROTULOS_TIPOS.get(tipo, tipo.capitalize())
+
+
 class CalculadoraView:
+    """Calculadora que sempre converte: o tipo é escolhido no cabeçalho."""
 
     def __init__(self, master):
         self.frame = ctk.CTkFrame(master, fg_color="transparent")
         self.calculadora = Calculadora()
+        self.painel_aberto = False
+        self._teclado_bloqueado = False
 
-        self.modo = MODO_CALCULO
-        self.tipo_conversao = None
-        self.unidade_inicial = None
-        self.unidade_final = None
+        # Começa no primeiro tipo do registro (Comprimento).
+        self.tipo_conversao = next(iter(CONVERSOES))
 
         self.criar_widgets()
         self.configurar_layout()
+        self.atualizar_display()
 
 
     def criar_widgets(self):
-        self.seletor_modo = ctk.CTkSegmentedButton(
-            self.frame,
-            values=list(MODOS_INVERSO),
-            command=self.selecionar_modo,
-            selected_color=tema.COR_DESTAQUE,
-            selected_hover_color=tema.COR_DESTAQUE_HOVER,
-            unselected_color=tema.COR_DIGITO,
-            unselected_hover_color=tema.COR_DIGITO_HOVER,
-            text_color=tema.COR_TEXTO,
-            font=tema.fonte(tema.TAM_TEXTO),
-            corner_radius=tema.RAIO_CARTAO
-        )
+        self.cabecalho = ctk.CTkFrame(
+            self.frame, fg_color="transparent", height=tema.ALTURA_CABECALHO)
 
-        self.seletor_modo.set(MODOS[self.modo])
-
-        self.display = ctk.CTkLabel(
-            self.frame,
-            text="0",
-            anchor="e",
-            font=tema.fonte(tema.TAM_DISPLAY),
+        self.label_tipo = ctk.CTkLabel(
+            self.cabecalho,
+            text=rotulo_do_tipo(self.tipo_conversao),
+            anchor="w",
+            font=tema.fonte(tema.TAM_GRANDE, "bold"),
             text_color=tema.COR_TEXTO
         )
+        self.button_tipos = ctk.CTkButton(
+            self.cabecalho,
+            text=TEXTO_BOTAO_TIPOS,
+            width=tema.LARGURA_BOTAO_TIPOS,
+            command=self.alternar_painel,
+            **tema.estilo_botao("digito", compacto=True)
+        )
+
+        # Quem muda as unidades (ou o tipo) só precisa pedir para atualizar:
+        # o display avisa pelo callback e a conversão é refeita.
+        self.display = DisplayConversao(
+            self.frame,
+            self.extrair_unidades(self.tipo_conversao),
+            ao_mudar_unidade=self.atualizar_display
+        )
+        # Atalhos: o resto do código (e os testes) fala "a caixa de unidade".
+        self.combobox_unidade_inicial = self.display.combobox_unidade_inicial
+        self.combobox_unidade_final = self.display.combobox_unidade_final
+
         self.frame_botoes = ctk.CTkFrame(self.frame, fg_color="transparent")
+
+        # O painel é filho da tela (e não da janela): quando a tela é destruída,
+        # ele vai junto e desfaz os binds de teclado que fez na janela.
+        self.painel_tipos = PainelTipos(
+            self.frame,
+            rotulos={tipo: rotulo_do_tipo(tipo) for tipo in CONVERSOES},
+            tipo_ativo=self.tipo_conversao,
+            ao_escolher=self.escolher_tipo,
+            ao_fechar=self.fechar_painel
+        )
 
         self.criar_botoes_numericos()
         self.criar_botoes_operadores()
         self.criar_botoes_controladores()
-
-        if self.modo == MODO_CONVERSAO:
-            self.criar_widgets_conversao()
 
 
     def criar_botao(self, texto, tipo, linha, coluna, comando, colunas=1):
@@ -124,101 +142,72 @@ class CalculadoraView:
         self.button_calcular = self.criar_botao("=", "destaque", 4, 3, self.calcular)
 
 
-    def criar_widgets_conversao(self):
-        self.frame_comboboxes_conversao = ctk.CTkFrame(self.frame, fg_color="transparent")
-        # Seletor com ícones no lugar da combobox; mantém o mesmo nome e a
-        # mesma interface (get/set/command), então o resto do código não muda.
-        self.combobox_tipo_conversao = SeletorTipo(
-            self.frame_comboboxes_conversao,
-            opcoes={tipo: ROTULOS_TIPOS.get(tipo, tipo.capitalize())
-                    for tipo in CONVERSOES},
-            command=self.atualizar_unidades,
-            ao_abrir=self.fechar_menus_das_unidades,
-        )
-
-        unidades = self.extrair_unidades(self.combobox_tipo_conversao.get())
-
-        self.combobox_unidade_inicial = ctk.CTkComboBox(
-            self.frame_comboboxes_conversao,
-            values=unidades,
-            width=tema.LARGURA_COMBOBOX_UNIDADE,
-            height=tema.ALTURA_CONTROLE,
-            **tema.estilo_combobox()
-        )
-        self.combobox_unidade_final = ctk.CTkComboBox(
-            self.frame_comboboxes_conversao,
-            values=unidades,
-            width=tema.LARGURA_COMBOBOX_UNIDADE,
-            height=tema.ALTURA_CONTROLE,
-            **tema.estilo_combobox()
-        )
-
-        self.combobox_unidade_inicial.set(unidades[0])
-        self.combobox_unidade_final.set(unidades[1])
-
-
-    def fechar_menus_das_unidades(self):
-        """Fecha o menu aberto de qualquer combobox de unidade.
-
-        O menu é uma janelinha do sistema, sempre desenhada acima da lista de
-        tipos. O CTkComboBox não tem um método público para fechá-lo, então
-        usamos os atributos internos dele; se uma versão futura os renomear,
-        a lista continua abrindo normalmente (só o menu fica aberto).
-        """
-        for combobox in (self.combobox_unidade_inicial,
-                         self.combobox_unidade_final):
-            menu = getattr(combobox, "_dropdown_menu", None)
-            if menu is not None:
-                menu.close()
-                combobox._close_on_next_click = False
-
-
     def configurar_layout(self):
         self.frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         self.frame.grid_columnconfigure(0, weight=1)
         # A linha do display absorve a folga da janela; o resto fica compacto.
-        self.frame.grid_rowconfigure(2, weight=1)
+        self.frame.grid_rowconfigure(1, weight=1)
 
-        self.seletor_modo.grid(row=0, column=0, padx=10, pady=(8, 4))
+        # Altura fixa no cabeçalho: sem isto ele encolheria para caber o conteúdo.
+        self.cabecalho.grid(row=0, column=0, padx=tema.ESPACO * 2, sticky="ew")
+        self.cabecalho.grid_propagate(False)
+        self.cabecalho.grid_columnconfigure(0, weight=1)
+        self.cabecalho.grid_rowconfigure(0, weight=1)
 
-        self.display.grid(row=2, column=0, padx=tema.ESPACO * 2, pady=(0, 4), sticky="sew")
+        self.label_tipo.grid(row=0, column=0, sticky="w")
+        self.button_tipos.grid(row=0, column=1, sticky="e")
 
-        self.frame_botoes.grid(row=3, column=0, padx=10, pady=(4, 10))
+        self.display.frame.grid(row=1, column=0, padx=tema.ESPACO * 2, pady=(0, 4), sticky="sew")
 
-        if self.modo == MODO_CONVERSAO:
-            self.frame_comboboxes_conversao.grid(row=1, column=0, padx=5, pady=4)
+        self.frame_botoes.grid(row=2, column=0, padx=10, pady=(4, 10))
 
-            # Lado a lado (e não empilhados) para caber na altura da janela.
-            self.combobox_tipo_conversao.grid(row=0, column=0, padx=4)
-            self.combobox_unidade_inicial.grid(row=0, column=1, padx=4)
-            self.combobox_unidade_final.grid(row=0, column=2, padx=4)
+        # O painel ocupa o lugar do display + teclado (linhas 1 e 2). Ele é
+        # posicionado agora e escondido: mostrar() reaproveita essa posição.
+        self.painel_tipos.grid(row=1, column=0, rowspan=2, padx=10, pady=(0, 10), sticky="nsew")
+        self.painel_tipos.ocultar()
 
 
-    def mostrar_no_display(self, texto):
-        texto = texto or "0"
+    def extrair_unidades(self, tipo_conversao):
+        _, unidades_disponiveis = CONVERSOES[tipo_conversao]
 
-        # Quanto mais longo o texto, menor a fonte, para nunca estourar a tela.
-        self.display.configure(text=texto, font=tema.fonte(tema.tamanho_fonte_display(texto)))
+        return list(unidades_disponiveis)
 
 
     def atualizar_display(self):
-        if self.calculadora.novo_numero:
-            texto = self.calculadora.entrada_atual
+        """Escreve as duas linhas: o que foi digitado e a conversão ao vivo."""
+        calc = self.calculadora
 
-        elif self.calculadora.operador is None:
-            texto = self.calculadora.entrada_atual
+        if calc.novo_numero:
+            # Logo após "=": mostra o resultado sem o ".0" que o float traz.
+            numero = calc.entrada_atual
+            topo = formatar_numero(float(numero))
+
+        elif calc.operador is None:
+            numero = calc.entrada_atual
+            topo = numero or "0"
 
         else:
-            simbolo = SIMBOLOS.get(self.calculadora.operador, self.calculadora.operador)
-            texto = f"{self.calculadora.num1} {simbolo}"
+            simbolo = SIMBOLOS.get(calc.operador, calc.operador)
+            topo = f"{formatar_numero(calc.num1)} {simbolo}"
 
-            if self.calculadora.entrada_atual != "":
-                texto += f" {self.calculadora.entrada_atual}"
+            if calc.entrada_atual != "":
+                numero = calc.entrada_atual
+                topo += f" {numero}"
+            else:
+                # Operador acabou de ser apertado: converte o primeiro número.
+                numero = str(calc.num1)
 
-        self.mostrar_no_display(texto)
+        baixo = converter_para_exibir(
+            self.tipo_conversao, numero,
+            self.display.unidade_inicial(), self.display.unidade_final())
+
+        self.display.mostrar(topo, baixo)
 
 
     def digitar(self, valor):
+        if self._teclado_bloqueado:
+            return
+
         try:
             self.calculadora.digitar(valor)
             self.atualizar_display()
@@ -228,6 +217,9 @@ class CalculadoraView:
 
 
     def selecionar_operador(self, operador):
+        if self._teclado_bloqueado:
+            return
+
         try:
             self.calculadora.selecionar_operador(operador)
             self.atualizar_display()
@@ -237,65 +229,82 @@ class CalculadoraView:
 
 
     def calcular(self):
+        if self._teclado_bloqueado:
+            return
+
         try:
-            if self.modo == MODO_CALCULO:
-                self.calculadora.calcular()
-                self.atualizar_display()
+            self.calculadora.calcular()
 
-            elif self.modo == MODO_CONVERSAO:
-                resultado = self.calculadora.calcular()
-                unidade_inicial = self.combobox_unidade_inicial.get()
-                unidade_final = self.combobox_unidade_final.get()
-                tipo = self.combobox_tipo_conversao.get()
-
-                resultado_conversao = converter_por_tipo(tipo, resultado, unidade_inicial, unidade_final)
-                self.mostrar_no_display(f"{resultado} {unidade_inicial} = {resultado_conversao} {unidade_final}")
-
-        except ValueError as erro:
+        except (ValueError, ZeroDivisionError) as erro:
             print(erro)
 
-        except ZeroDivisionError as erro:
-            print(erro)
+        self.atualizar_display()
 
 
     def limpar(self):
+        if self._teclado_bloqueado:
+            return
+
         self.calculadora.limpar()
         self.atualizar_display()
 
 
-    def atualizar_modo(self):
-        for widget in self.frame.winfo_children():
-            widget.destroy()
+    def abrir_painel(self):
+        if self.painel_aberto:
+            return
 
-        self.criar_widgets()
-        self.configurar_layout()
+        self.painel_aberto = True
+        # esconder_grid() guarda a posição para mostrar_grid() devolver igual.
+        esconder_grid(self.display.frame)
+        esconder_grid(self.frame_botoes)
+        self.painel_tipos.mostrar()
+        self.button_tipos.configure(text=TEXTO_BOTAO_VOLTAR)
+
+
+    def fechar_painel(self):
+        if not self.painel_aberto:
+            return
+
+        self.painel_aberto = False
+        self.painel_tipos.ocultar()
+        mostrar_grid(self.display.frame)
+        mostrar_grid(self.frame_botoes)
+        self.button_tipos.configure(text=TEXTO_BOTAO_TIPOS)
+
+
+    def _bloquear_teclado_um_instante(self):
+        """Ignora o teclado por um instante depois de escolher um tipo.
+
+        O painel fecha no primeiro clique do tile; o segundo clique de um
+        duplo-clique cairia no botão do teclado que ficou embaixo (o C, por
+        exemplo, apagaria o número).
+        """
+        self._teclado_bloqueado = True
+
+        def liberar():
+            self._teclado_bloqueado = False
+
+        self.frame.winfo_toplevel().after(tema.TEMPO_IGNORAR_CLIQUE, liberar)
+
+
+    def alternar_painel(self):
+        if self.painel_aberto:
+            self.fechar_painel()
+        else:
+            self.abrir_painel()
+
+
+    def escolher_tipo(self, tipo):
+        if self.painel_aberto:
+            self._bloquear_teclado_um_instante()
+        self.fechar_painel()
+
+        # Escolher o tipo que já está ativo não mexe nas unidades escolhidas.
+        if tipo == self.tipo_conversao:
+            return
+
+        self.tipo_conversao = tipo
+        self.painel_tipos.definir_ativo(tipo)
+        self.label_tipo.configure(text=rotulo_do_tipo(tipo))
+        self.display.definir_unidades(self.extrair_unidades(tipo))
         self.atualizar_display()
-
-
-    def selecionar_modo(self, nome_exibido):
-        # Este método é o comando do seletor de modo, e a troca de modo destrói
-        # esse mesmo seletor. Esperamos o clique terminar antes de reconstruir.
-        modo = MODOS_INVERSO[nome_exibido]
-        executar_depois_do_clique(self.frame, lambda: self.mudar_modo(modo))
-
-
-    def mudar_modo(self, modo):
-        self.modo = modo
-        self.atualizar_modo()
-
-
-    def extrair_unidades(self, tipo_conversao):
-        _, unidades_disponiveis = CONVERSOES[tipo_conversao]
-        unidades = list(unidades_disponiveis)
-
-        return unidades
-
-
-    def atualizar_unidades(self, tipo_conversao):
-        unidades = self.extrair_unidades(tipo_conversao)
-
-        self.combobox_unidade_inicial.configure(values=unidades)
-        self.combobox_unidade_final.configure(values=unidades)
-
-        self.combobox_unidade_inicial.set(unidades[0])
-        self.combobox_unidade_final.set(unidades[1])
