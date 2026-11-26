@@ -17,13 +17,18 @@ def traduzir_tecla(evento):
     """Traduz uma tecla em (ação, valor), ou None se a calculadora a ignora.
 
     Ações: "digitar" (valor = dígito ou "."), "operador" (valor = + - * /),
-    "calcular", "limpar" e "apagar" (valor = None).
+    "calcular", "limpar", "apagar" e "copiar" (valor = None).
     """
     # Se o foco está num campo de texto (a caixa de unidade é um), a tecla
     # pertence a ele: senão digitar "km" apertaria o C da calculadora.
     winfo_class = getattr(evento.widget, "winfo_class", None)
     if winfo_class is not None and winfo_class() == "Entry":
         return None
+
+    # Ctrl+C: o evento traz char="\x03" (e não "c"), então não confunde com o
+    # "c" que limpa. O bit 0x4 do `state` é a tecla Control.
+    if evento.keysym in ("c", "C") and getattr(evento, "state", 0) & 0x4:
+        return ("copiar", None)
 
     if evento.keysym in _POR_NOME:
         return (_POR_NOME[evento.keysym], None)

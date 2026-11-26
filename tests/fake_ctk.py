@@ -124,6 +124,12 @@ class Fake:
             raiz = raiz.master
         return raiz
 
+    def clipboard_clear(self):
+        self.clipboard_texto = ""
+
+    def clipboard_append(self, texto):
+        self.clipboard_texto = getattr(self, "clipboard_texto", "") + texto
+
     def winfo_class(self):
         return "Frame"
 

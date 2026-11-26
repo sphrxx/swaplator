@@ -5,7 +5,7 @@ from swaplator.interface.componentes import BotaoRedondo, esconder_grid, mostrar
 from swaplator.interface.atalhos_teclado import AtalhosTeclado
 from swaplator.interface.display_conversao import DisplayConversao
 from swaplator.interface.painel_tipos import PainelTipos
-from swaplator.interface.formato import converter_para_exibir, formatar_numero
+from swaplator.interface.formato import TRACO, converter_para_exibir, formatar_numero
 from swaplator.interface.seletor_tipo import ROTULOS_TIPOS
 from swaplator.conversores.registro import CONVERSOES
 from swaplator.calculadora.calculadora import Calculadora
@@ -17,6 +17,8 @@ SIMBOLOS = {"/": "÷", "*": "×", "-": "−", "+": "+"}
 
 TEXTO_BOTAO_TIPOS = "⊞ Tipos"
 TEXTO_BOTAO_VOLTAR = "Voltar"
+TEXTO_BOTAO_COPIAR = "Copiar"
+TEXTO_BOTAO_COPIADO = "Copiado ✓"
 
 
 def rotulo_do_tipo(tipo):
@@ -50,6 +52,14 @@ class CalculadoraView:
             anchor="w",
             font=tema.fonte(tema.TAM_GRANDE, "bold"),
             text_color=tema.COR_TEXTO
+        )
+        self.button_copiar = ctk.CTkButton(
+            self.cabecalho,
+            text=TEXTO_BOTAO_COPIAR,
+            width=tema.LARGURA_BOTAO_COPIAR,
+            command=self.copiar_resultado,
+            **{**tema.estilo_botao("digito", compacto=True),
+               "font": tema.fonte(tema.TAM_TEXTO)}
         )
         self.button_tipos = ctk.CTkButton(
             self.cabecalho,
@@ -159,7 +169,8 @@ class CalculadoraView:
         self.cabecalho.grid_rowconfigure(0, weight=1)
 
         self.label_tipo.grid(row=0, column=0, sticky="w")
-        self.button_tipos.grid(row=0, column=1, sticky="e")
+        self.button_copiar.grid(row=0, column=1, sticky="e", padx=(0, tema.ESPACO))
+        self.button_tipos.grid(row=0, column=2, sticky="e")
 
         self.display.frame.grid(row=1, column=0, padx=tema.ESPACO * 2, pady=(0, 4), sticky="sew")
 
@@ -183,27 +194,28 @@ class CalculadoraView:
 
         if calc.novo_numero:
             # Logo após "=": mostra o resultado sem o ".0" que o float traz.
-            numero = calc.entrada_atual
-            topo = formatar_numero(float(numero))
+            topo = formatar_numero(float(calc.entrada_atual))
 
         elif calc.operador is None:
-            numero = calc.entrada_atual
-            topo = numero or "0"
+            topo = calc.entrada_atual or "0"
 
         else:
             simbolo = SIMBOLOS.get(calc.operador, calc.operador)
             topo = f"{formatar_numero(calc.num1)} {simbolo}"
 
             if calc.entrada_atual != "":
-                numero = calc.entrada_atual
-                topo += f" {numero}"
-            else:
-                # Operador acabou de ser apertado: converte o primeiro número.
-                numero = str(calc.num1)
+                topo += f" {calc.entrada_atual}"
 
-        baixo = converter_para_exibir(
-            self.tipo_conversao, numero,
-            self.display.unidade_inicial(), self.display.unidade_final())
+        # A linha de baixo converte o valor da CONTA inteira, mesmo antes do
+        # "=": em "233 ÷ 3" converte 77,67, e não só o último número (3).
+        try:
+            numero = str(calc.resultado_parcial())
+        except ZeroDivisionError:
+            baixo = TRACO
+        else:
+            baixo = converter_para_exibir(
+                self.tipo_conversao, numero,
+                self.display.unidade_inicial(), self.display.unidade_final())
 
         self.display.mostrar(topo, baixo)
 
@@ -245,6 +257,28 @@ class CalculadoraView:
         self.atualizar_display()
 
 
+    def copiar_resultado(self):
+        """Copia o resultado com a unidade final (ex.: "7.77 cm") para a área de transferência."""
+        texto = self.display.texto_resultado
+
+        if texto == TRACO:
+            return   # não há resultado válido para copiar
+
+        self.frame.clipboard_clear()
+        self.frame.clipboard_append(f"{texto} {self.display.unidade_final()}")
+
+        # Avisa que copiou e volta ao normal depois de um instante.
+        self.button_copiar.configure(text=TEXTO_BOTAO_COPIADO)
+        self.frame.winfo_toplevel().after(
+            tema.TEMPO_FEEDBACK_COPIAR, self._restaurar_botao_copiar)
+
+
+    def _restaurar_botao_copiar(self):
+        # A tela pode ter sido trocada nesse meio-tempo.
+        if self.frame.winfo_exists():
+            self.button_copiar.configure(text=TEXTO_BOTAO_COPIAR)
+
+
     def apagar(self):
         if self._teclado_bloqueado:
             return
@@ -272,6 +306,9 @@ class CalculadoraView:
 
         elif acao == "apagar":
             self.apagar()
+
+        elif acao == "copiar":
+            self.copiar_resultado()
 
 
     def limpar(self):

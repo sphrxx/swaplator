@@ -47,6 +47,35 @@ class Calculadora:
         self.novo_numero = False
             
 
+    def _operar(self, num2):
+        if(self.operador == "+"):
+            return self.num1 + num2
+
+        if(self.operador == "-"):
+            return self.num1 - num2
+
+        if(self.operador == "*" or self.operador == "x"):
+            return self.num1 * num2
+
+        if(self.operador == "/" or self.operador == ":"):
+            return self.num1 / num2
+
+
+    def resultado_parcial(self):
+        """Valor da conta como está agora, sem alterar nada (para o display).
+
+        Ex.: com "233 / 3" digitado, devolve 77.666... mesmo antes do "=".
+        Pode levantar ZeroDivisionError (ex.: "1 / 0").
+        """
+        if self.novo_numero or self.operador is None:
+            return float(self.entrada_atual) if self.entrada_atual else 0.0
+
+        if self.entrada_atual == "":
+            return self.num1    # operador acabou de ser apertado
+
+        return self._operar(float(self.entrada_atual))
+
+
     def calcular(self):
         if(self.novo_numero):
             resultado = float(self.entrada_atual)
@@ -61,19 +90,7 @@ class Calculadora:
             if(self.entrada_atual == ""):
                 raise ValueError("Segundo número não informado.")
 
-            num2 = float(self.entrada_atual)
-
-            if(self.operador == "+"):
-                resultado = self.num1 + num2
-            
-            elif(self.operador == "-"):
-                resultado = self.num1 - num2
-
-            elif(self.operador == "*" or self.operador == "x"):
-                resultado = self.num1 * num2
-
-            elif(self.operador == "/" or self.operador == ":"):
-                resultado = self.num1 / num2
+            resultado = self._operar(float(self.entrada_atual))
 
         self.entrada_atual = str(resultado)
         self.novo_numero = True

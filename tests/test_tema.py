@@ -130,6 +130,7 @@ class TestTema(unittest.TestCase):
         # espaço) + ~60 de margens e respiros.
         altura = (tema.ALTURA_CABECALHO
                   + 2 * tema.ALTURA_LINHA_DISPLAY
+                  + 2 * tema.PADDING_DISPLAY
                   + 5 * (tema.TAMANHO_BOTAO + tema.ESPACO)
                   + 60)
 

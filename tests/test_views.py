@@ -60,7 +60,8 @@ class TestCalculadoraConversora(ViewBase):
         self.assertEqual((self.topo(), self.baixo()), ("7 +", "0.7"))
 
         self.apertar("3")
-        self.assertEqual((self.topo(), self.baixo()), ("7 + 3", "0.3"))
+        # A linha de baixo converte a conta toda (7 + 3 = 10 mm = 1 cm).
+        self.assertEqual((self.topo(), self.baixo()), ("7 + 3", "1"))
 
         self.apertar("=")
         self.assertEqual((self.topo(), self.baixo()), ("10", "1"))
@@ -412,6 +413,128 @@ class TestTecladoFisico(unittest.TestCase):
 
         self.assertEqual(
             [u for u in self.janela.unbinds if u[0] == "<Key>"], ligados)
+
+
+class TestConversaoDaContaEmAndamento(ViewBase):
+
+    def test_converte_o_resultado_da_conta_e_nao_so_o_ultimo_numero(self):
+        self.apertar("2", "3", "3", "/", "3")
+
+        self.assertEqual(self.topo(), "233 ÷ 3")
+        self.assertEqual(self.baixo(), "7.766666667")   # 77.67 mm em cm
+
+    def test_conta_com_soma_ja_converte_a_soma(self):
+        self.apertar("1", "0", "+", "5")
+
+        self.assertEqual(self.baixo(), "1.5")   # 15 mm em cm
+
+    def test_divisao_por_zero_em_andamento_mostra_traco(self):
+        self.apertar("1", "/", "0")
+
+        self.assertEqual(self.baixo(), "—")
+
+    def test_apos_o_igual_converte_o_resultado(self):
+        self.apertar("2", "3", "3", "/", "3", "=")
+
+        self.assertEqual(self.baixo(), "7.766666667")
+
+    def test_trocar_a_unidade_reconverte_a_conta_em_andamento(self):
+        self.apertar("2", "0", "/", "4")
+
+        self.view.display.combobox_unidade_final.set("m")
+        self.view.display.combobox_unidade_final.opcoes["command"]("m")
+
+        self.assertEqual(self.baixo(), "0.005")   # 5 mm em m
+
+
+class TestCopiarResultado(unittest.TestCase):
+
+    def setUp(self):
+        self.janela = fake_ctk.Fake()
+        self.agendados = []
+        self.janela.after = lambda ms, funcao=None, *args: self.agendados.append(funcao)
+        self.view = CalculadoraView(self.janela)
+
+    def apertar(self, *textos):
+        for texto in textos:
+            fake_ctk.achar_botao(self.view.frame_botoes,
+                                 SIMBOLOS.get(texto, texto)).opcoes["command"]()
+
+    def copiado(self):
+        return getattr(self.view.frame, "clipboard_texto", None)
+
+    def test_botao_copiar_copia_a_linha_de_baixo(self):
+        self.apertar("2", "3", "3", "/", "3")
+
+        self.view.button_copiar.opcoes["command"]()
+
+        self.assertEqual(self.copiado(), "7.766666667 cm")
+
+    def test_copia_o_numero_com_a_unidade_final(self):
+        self.apertar("1", "0")
+
+        self.view.copiar_resultado()
+
+        self.assertEqual(self.copiado(), "1 cm")
+
+    def test_copia_a_unidade_final_escolhida(self):
+        self.apertar("1", "0")
+        self.view.display.combobox_unidade_final.set("m")
+        self.view.display.combobox_unidade_final.opcoes["command"]("m")
+
+        self.view.copiar_resultado()
+
+        self.assertEqual(self.copiado(), "0.01 m")
+
+    def test_nao_copia_o_traco(self):
+        self.apertar("1", "/", "0")
+
+        self.view.copiar_resultado()
+
+        self.assertIsNone(self.copiado())
+
+    def test_botao_copiar_fica_no_cabecalho_ao_lado_do_tipos(self):
+        self.assertEqual(self.view.button_copiar.opcoes["text"], "Copiar")
+        self.assertEqual(self.view.button_copiar.opcoes_grid["column"], 1)
+        self.assertEqual(self.view.button_tipos.opcoes_grid["column"], 2)
+
+    def test_botao_mostra_copiado_e_volta_ao_normal(self):
+        self.apertar("5")
+
+        self.view.copiar_resultado()
+        self.assertEqual(self.view.button_copiar.opcoes["text"], "Copiado ✓")
+
+        for funcao in self.agendados:
+            funcao()
+        self.assertEqual(self.view.button_copiar.opcoes["text"], "Copiar")
+
+    def test_ctrl_c_copia(self):
+        from types import SimpleNamespace
+        self.apertar("1", "0")
+        evento = SimpleNamespace(char="\x03", keysym="c", widget=self.janela, state=4)
+
+        for handler in self.janela.handlers["<Key>"]:
+            handler(evento)
+
+        self.assertEqual(self.copiado(), "1 cm")
+
+    def test_ctrl_c_nao_limpa_a_calculadora(self):
+        from types import SimpleNamespace
+        self.apertar("1", "0")
+        evento = SimpleNamespace(char="\x03", keysym="c", widget=self.janela, state=4)
+
+        for handler in self.janela.handlers["<Key>"]:
+            handler(evento)
+
+        self.assertEqual(self.view.display.label_entrada.opcoes["text"], "10")
+
+    def test_copiar_com_o_painel_aberto_nao_faz_nada(self):
+        self.apertar("5")
+        self.view.abrir_painel()
+
+        self.view.ao_acao_do_teclado("copiar", None)
+
+        self.assertIsNone(self.copiado())
 
 
 class TestBotoesRedondosDaCalculadora(unittest.TestCase):

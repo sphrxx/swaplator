@@ -75,6 +75,15 @@ class TestDisplayConversao(unittest.TestCase):
 
         self.assertEqual(len(self.avisos), 2)
 
+    def test_display_e_um_cartao_mais_claro_que_o_fundo(self):
+        self.assertEqual(self.display.frame.opcoes["fg_color"], tema.COR_SUPERFICIE)
+        self.assertEqual(self.display.frame.opcoes["corner_radius"], tema.RAIO_CARTAO)
+
+    def test_guarda_o_texto_do_resultado_para_copiar(self):
+        self.display.mostrar("12", "1.2")
+
+        self.assertEqual(self.display.texto_resultado, "1.2")
+
     def test_caixas_usam_largura_e_altura_do_tema(self):
         for caixa in (self.display.combobox_unidade_inicial,
                       self.display.combobox_unidade_final):

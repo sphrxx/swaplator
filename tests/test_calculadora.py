@@ -211,6 +211,68 @@ class TestCalculadora(unittest.TestCase):
         
         self.assertEqual(calculadora.calcular(), 5)
 
+class TestResultadoParcial(unittest.TestCase):
+
+    def digitar(self, calculadora, texto):
+        for char in texto:
+            calculadora.digitar(char)
+
+    def test_sem_operador_e_o_que_foi_digitado(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "12.5")
+
+        self.assertEqual(calculadora.resultado_parcial(), 12.5)
+
+    def test_sem_nada_digitado_e_zero(self):
+        self.assertEqual(Calculadora().resultado_parcial(), 0.0)
+
+    def test_conta_em_andamento_ja_e_calculada(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "233")
+        calculadora.selecionar_operador("/")
+        self.digitar(calculadora, "3")
+
+        self.assertAlmostEqual(calculadora.resultado_parcial(), 77.6666666667)
+
+    def test_operador_sem_segundo_numero_vale_o_primeiro(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "7")
+        calculadora.selecionar_operador("+")
+
+        self.assertEqual(calculadora.resultado_parcial(), 7.0)
+
+    def test_nao_altera_o_estado(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "6")
+        calculadora.selecionar_operador("*")
+        self.digitar(calculadora, "7")
+
+        calculadora.resultado_parcial()
+
+        self.assertEqual(
+            (calculadora.num1, calculadora.operador, calculadora.entrada_atual,
+             calculadora.novo_numero),
+            (6.0, "*", "7", False))
+
+    def test_depois_do_igual_e_o_resultado(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "6")
+        calculadora.selecionar_operador("*")
+        self.digitar(calculadora, "7")
+        calculadora.calcular()
+
+        self.assertEqual(calculadora.resultado_parcial(), 42.0)
+
+    def test_divisao_por_zero_levanta_zero_division(self):
+        calculadora = Calculadora()
+        self.digitar(calculadora, "1")
+        calculadora.selecionar_operador("/")
+        self.digitar(calculadora, "0")
+
+        with self.assertRaises(ZeroDivisionError):
+            calculadora.resultado_parcial()
+
+
 class TestApagar(unittest.TestCase):
 
     def test_apagar_remove_o_ultimo_caractere(self):

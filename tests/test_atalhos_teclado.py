@@ -15,8 +15,12 @@ def tearDownModule():
     fake_ctk.remover()
 
 
-def tecla(char="", keysym="", widget=None):
-    return SimpleNamespace(char=char, keysym=keysym, widget=widget or fake_ctk.Fake())
+CONTROL = 0x4
+
+
+def tecla(char="", keysym="", widget=None, state=0):
+    return SimpleNamespace(char=char, keysym=keysym, widget=widget or fake_ctk.Fake(),
+                           state=state)
 
 
 class TestTraduzirTecla(unittest.TestCase):
@@ -46,6 +50,19 @@ class TestTraduzirTecla(unittest.TestCase):
         self.assertEqual(traduzir_tecla(tecla("", "Delete")), ("limpar", None))
         self.assertEqual(traduzir_tecla(tecla("c", "c")), ("limpar", None))
         self.assertEqual(traduzir_tecla(tecla("C", "C")), ("limpar", None))
+
+    def test_ctrl_c_copia_e_nao_limpa(self):
+        self.assertEqual(
+            traduzir_tecla(tecla("\x03", "c", state=CONTROL)), ("copiar", None))
+        self.assertEqual(
+            traduzir_tecla(tecla("\x03", "C", state=CONTROL)), ("copiar", None))
+
+    def test_ctrl_c_num_campo_de_texto_fica_com_o_campo(self):
+        campo = fake_ctk.Fake()
+        campo.winfo_class = lambda: "Entry"
+
+        self.assertIsNone(
+            traduzir_tecla(tecla("\x03", "c", widget=campo, state=CONTROL)))
 
     def test_backspace_apaga(self):
         self.assertEqual(traduzir_tecla(tecla("\x08", "BackSpace")), ("apagar", None))
