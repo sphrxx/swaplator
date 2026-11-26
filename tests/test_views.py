@@ -74,6 +74,44 @@ class TestCalculadoraView(unittest.TestCase):
         self.assertNotIn(lista, janela.filhos)
 
 
+class TestMenusDasUnidadesComALista(unittest.TestCase):
+    """O menu de uma combobox é uma janelinha própria, sempre acima de tudo:
+    se ficasse aberto, taparia a lista de tipos."""
+
+    def setUp(self):
+        self.view = CalculadoraView(fake_ctk.Fake())
+        self.view.mudar_modo("conversao")
+
+    def _menu_aberto_em(self, combobox):
+        fechado = []
+        menu = fake_ctk.Fake()
+        menu.close = lambda: fechado.append(True)
+        combobox._dropdown_menu = menu
+        combobox._close_on_next_click = True
+        return fechado
+
+    def test_abrir_a_lista_fecha_o_menu_das_duas_unidades(self):
+        inicial = self.view.combobox_unidade_inicial
+        final = self.view.combobox_unidade_final
+        fechou_inicial = self._menu_aberto_em(inicial)
+        fechou_final = self._menu_aberto_em(final)
+
+        self.view.combobox_tipo_conversao.abrir()
+
+        self.assertEqual(fechou_inicial, [True])
+        self.assertEqual(fechou_final, [True])
+        # Senão o próximo clique na combobox "fecharia" um menu já fechado
+        # em vez de abrir o dela.
+        self.assertFalse(inicial._close_on_next_click)
+        self.assertFalse(final._close_on_next_click)
+
+    def test_combobox_sem_menu_interno_nao_quebra_a_abertura(self):
+        # O Fake não tem _dropdown_menu: simula uma versão do CTk diferente.
+        self.view.combobox_tipo_conversao.abrir()
+
+        self.assertTrue(self.view.combobox_tipo_conversao.esta_aberto)
+
+
 class TestAparenciaDaCalculadora(unittest.TestCase):
 
     def setUp(self):

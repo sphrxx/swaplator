@@ -35,19 +35,21 @@ class SeletorTipo(ctk.CTkFrame):
     """
 
     def __init__(self, master, opcoes, command=None,
-                 width=tema.LARGURA_SELETOR_TIPO):
+                 width=tema.LARGURA_SELETOR_TIPO, ao_abrir=None):
         super().__init__(master, width=width, height=tema.ALTURA_CONTROLE,
                          fg_color=tema.COR_DIGITO,
                          corner_radius=tema.RAIO_CARTAO)
         self._rotulos = dict(opcoes)        # chave -> texto mostrado
         self._valor = next(iter(self._rotulos))
         self._command = command
+        self._ao_abrir = ao_abrir           # avisa quem usa que a lista vai abrir
         self._lista = None                  # criada só na primeira abertura
         self.linhas = {}                    # chave -> linha da lista
         self._icones_das_linhas = {}        # chave -> canvas do ícone
         self._ids_de_bind = {}              # sequência -> id devolvido pelo bind
         self._largura = width
         self._aberto = False                # a lista está visível?
+        self._reposicao_pendente = False    # já agendei reposicionar a lista?
         self._destacado = _NENHUM           # linha com a cor de hover agora
 
         self._montar_gatilho()
@@ -94,6 +96,11 @@ class SeletorTipo(ctk.CTkFrame):
         for parte in (self, self._icone, self._texto, seta):
             parte.bind("<Button-1>", lambda evento: self.alternar())
 
+        # Teclado: com o gatilho em foco, Enter, espaço e seta para baixo
+        # abrem a lista.
+        for tecla in ("<Return>", "<space>", "<Down>"):
+            self.bind(tecla, self._ao_tecla_no_gatilho)
+
     def _redesenhar_atual(self):
         """Mostra no gatilho o ícone e o nome do tipo escolhido."""
         self._icone.delete("all")
@@ -134,6 +141,12 @@ class SeletorTipo(ctk.CTkFrame):
         if self._aberto:
             return
 
+        # Primeiro deixa quem usa o seletor fechar o que puder ficar por
+        # cima da lista (ex.: o menu de uma combobox, que é uma janelinha
+        # própria e sempre aparece acima de tudo).
+        if self._ao_abrir is not None:
+            self._ao_abrir()
+
         if self._lista is None:
             self._montar_lista()
 
@@ -142,16 +155,26 @@ class SeletorTipo(ctk.CTkFrame):
         self._lista.lift()
         self._aberto = True
 
-        # Clique fora e Esc fecham a lista. Os binds da janela são feitos
-        # UMA vez só e ficam até o destroy(): desligá-los dentro do próprio
-        # clique deixaria o Tk chamar um comando já apagado. Enquanto a lista
-        # está fechada, os handlers simplesmente não fazem nada.
+        # O foco vem para o seletor: assim Enter e as setas não chegam ao
+        # campo de texto que estava em foco antes. O CTkFrame liga os binds
+        # no canvas interno, então é ele que precisa receber o foco.
+        getattr(self, "_canvas", self).focus_set()
+
+        # Os binds da janela são feitos UMA vez só e ficam até o destroy():
+        # desligá-los dentro do próprio clique deixaria o Tk chamar um
+        # comando já apagado. Enquanto a lista está fechada, os handlers
+        # simplesmente não fazem nada.
         if not self._ids_de_bind:
             janela = self.winfo_toplevel()
-            self._ids_de_bind["<Button-1>"] = janela.bind(
-                "<Button-1>", self._ao_clicar, add="+")
-            self._ids_de_bind["<Escape>"] = janela.bind(
-                "<Escape>", self._ao_esc, add="+")
+            for sequencia, handler in (
+                    ("<Button-1>", self._ao_clicar),    # clique fora fecha
+                    ("<Escape>", self._ao_esc),         # Esc fecha
+                    ("<Configure>", self._ao_configurar),  # janela mudou
+                    ("<Up>", self._ao_cima),
+                    ("<Down>", self._ao_baixo),
+                    ("<Return>", self._ao_enter)):
+                self._ids_de_bind[sequencia] = janela.bind(
+                    sequencia, handler, add="+")
 
     def fechar(self):
         if not self._aberto:
@@ -193,6 +216,65 @@ class SeletorTipo(ctk.CTkFrame):
     def _ao_esc(self, evento=None):
         if self._aberto:
             self.fechar()
+
+    def _ao_configurar(self, evento):
+        """A janela mudou de tamanho ou lugar: a lista acompanha o gatilho.
+
+        Todo widget da janela dispara <Configure> e o evento sobe até aqui,
+        então só nos interessa o da própria janela.
+        """
+        if not self._aberto or evento.widget is not self.winfo_toplevel():
+            return
+
+        # Neste instante o Tk ainda não recalculou a posição do gatilho, então
+        # esperamos o layout assentar (after_idle). A flag junta os dezenas de
+        # eventos de um arrasto de borda em uma única reposição.
+        if not self._reposicao_pendente:
+            self._reposicao_pendente = True
+            self.after_idle(self._reposicionar_lista)
+
+    def _reposicionar_lista(self):
+        self._reposicao_pendente = False
+        if self._aberto:
+            self._posicionar_lista()
+
+    # --- Teclado ------------------------------------------------------
+    def _ao_tecla_no_gatilho(self, evento=None):
+        """Enter/espaço/seta no gatilho: abre a lista.
+
+        Devolve "break" para o Tk não passar o MESMO evento adiante, senão o
+        handler de Enter da janela veria a lista já aberta e escolheria o
+        item na hora. Com a lista aberta, deixa o evento seguir.
+        """
+        if not self._aberto:
+            self.abrir()
+            return "break"
+
+    def _ao_baixo(self, evento=None):
+        self._mover_destaque(+1)
+
+    def _ao_cima(self, evento=None):
+        self._mover_destaque(-1)
+
+    def _mover_destaque(self, passo):
+        if not self._aberto:
+            return
+
+        chaves = list(self._rotulos)
+        if self._destacado in chaves:
+            posicao = (chaves.index(self._destacado) + passo) % len(chaves)
+        else:
+            # Ainda sem destaque: a primeira tecla só mostra onde estamos.
+            posicao = chaves.index(self._valor)
+
+        self._destacar(chaves[posicao])
+
+    def _ao_enter(self, evento=None):
+        if not self._aberto:
+            return
+
+        chave = self._destacado if self._destacado in self._rotulos else self._valor
+        self.escolher(chave)
 
     @staticmethod
     def _pertence_a(widget, ancestral):

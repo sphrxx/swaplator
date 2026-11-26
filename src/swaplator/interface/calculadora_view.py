@@ -133,6 +133,7 @@ class CalculadoraView:
             opcoes={tipo: ROTULOS_TIPOS.get(tipo, tipo.capitalize())
                     for tipo in CONVERSOES},
             command=self.atualizar_unidades,
+            ao_abrir=self.fechar_menus_das_unidades,
         )
 
         unidades = self.extrair_unidades(self.combobox_tipo_conversao.get())
@@ -154,6 +155,22 @@ class CalculadoraView:
 
         self.combobox_unidade_inicial.set(unidades[0])
         self.combobox_unidade_final.set(unidades[1])
+
+
+    def fechar_menus_das_unidades(self):
+        """Fecha o menu aberto de qualquer combobox de unidade.
+
+        O menu é uma janelinha do sistema, sempre desenhada acima da lista de
+        tipos. O CTkComboBox não tem um método público para fechá-lo, então
+        usamos os atributos internos dele; se uma versão futura os renomear,
+        a lista continua abrindo normalmente (só o menu fica aberto).
+        """
+        for combobox in (self.combobox_unidade_inicial,
+                         self.combobox_unidade_final):
+            menu = getattr(combobox, "_dropdown_menu", None)
+            if menu is not None:
+                menu.close()
+                combobox._close_on_next_click = False
 
 
     def configurar_layout(self):

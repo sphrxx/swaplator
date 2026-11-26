@@ -73,6 +73,9 @@ class Fake:
     def focus(self):
         pass
 
+    def focus_set(self):
+        pass
+
     def bind(self, *args, **kwargs):
         # Devolve um id diferente a cada bind, como o Tk faz com add="+".
         id_do_bind = f"id-{len(self.binds)}"
