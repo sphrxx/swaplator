@@ -245,7 +245,7 @@ class TestPainelDeTipos(unittest.TestCase):
         self.view.frame.destroy()
 
         self.assertEqual({seq for seq, _ in self.janela.unbinds}, sequencias)
-        self.assertEqual(len(sequencias), 6)
+        self.assertEqual(len(sequencias), 7)   # 6 do painel + <Key> do teclado
 
 
 class TestEscalaDaTelaComPainel(unittest.TestCase):
@@ -323,6 +323,95 @@ class TestCliqueDuploNoTile(unittest.TestCase):
         self.apertar("C")
 
         self.assertEqual(self.view.display.label_entrada.opcoes["text"], "0")
+
+
+class TestTecladoFisico(unittest.TestCase):
+
+    def setUp(self):
+        self.janela = fake_ctk.Fake()
+        self.agendados = []
+        self.janela.after = lambda ms, funcao=None, *args: self.agendados.append(funcao)
+        self.view = CalculadoraView(self.janela)
+
+    def tecla(self, char="", keysym=""):
+        from types import SimpleNamespace
+        evento = SimpleNamespace(char=char, keysym=keysym, widget=self.janela)
+        for handler in self.janela.handlers["<Key>"]:
+            handler(evento)
+
+    def digitar(self, texto):
+        for char in texto:
+            self.tecla(char, char)
+
+    def topo(self):
+        return self.view.display.label_entrada.opcoes["text"]
+
+    def baixo(self):
+        return self.view.display.label_resultado.opcoes["text"]
+
+    def test_digitar_e_converter_pelo_teclado(self):
+        self.digitar("10")
+
+        self.assertEqual((self.topo(), self.baixo()), ("10", "1"))
+
+    def test_conta_completa_pelo_teclado(self):
+        self.digitar("7")
+        self.tecla("+", "plus")
+        self.digitar("3")
+        self.tecla("\r", "Return")
+
+        self.assertEqual(self.topo(), "10")
+
+    def test_virgula_vira_ponto_decimal(self):
+        self.digitar("1")
+        self.tecla(",", "comma")
+        self.digitar("5")
+
+        self.assertEqual(self.topo(), "1.5")
+
+    def test_backspace_apaga_e_reconverte(self):
+        self.digitar("12")
+        self.tecla("\x08", "BackSpace")
+
+        self.assertEqual((self.topo(), self.baixo()), ("1", "0.1"))
+
+    def test_esc_limpa(self):
+        self.digitar("12")
+        self.tecla("\x1b", "Escape")
+
+        self.assertEqual((self.topo(), self.baixo()), ("0", "0"))
+
+    def test_operador_sem_numero_nao_quebra(self):
+        self.tecla("+", "plus")   # não deve levantar exceção
+
+        self.assertEqual(self.topo(), "0")
+
+    def test_teclado_ignorado_com_o_painel_aberto(self):
+        self.digitar("5")
+        self.view.abrir_painel()
+
+        self.digitar("9")
+        self.tecla("\x1b", "Escape")
+
+        self.view.fechar_painel()
+        self.assertEqual(self.topo(), "5")
+
+    def test_teclado_ignorado_logo_apos_escolher_um_tipo(self):
+        self.digitar("5")
+        self.view.abrir_painel()
+        self.view.painel_tipos.escolher("massa")
+
+        self.digitar("9")
+
+        self.assertEqual(self.topo(), "5")
+
+    def test_destruir_a_tela_desfaz_o_bind_do_teclado(self):
+        ligados = [(seq, i) for seq, i in self.janela.binds if seq == "<Key>"]
+
+        self.view.frame.destroy()
+
+        self.assertEqual(
+            [u for u in self.janela.unbinds if u[0] == "<Key>"], ligados)
 
 
 class TestBotoesRedondosDaCalculadora(unittest.TestCase):

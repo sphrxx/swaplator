@@ -62,7 +62,7 @@ class TestTelaInicial(unittest.TestCase):
         self.app.selecionar_view("area")
 
         self.assertEqual({seq for seq, _ in raiz.unbinds}, sequencias)
-        self.assertEqual(len(sequencias), 6)
+        self.assertEqual(len(sequencias), 7)   # 6 do painel + <Key> do teclado
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ import customtkinter as ctk
 
 from swaplator.interface import tema
 from swaplator.interface.componentes import BotaoRedondo, esconder_grid, mostrar_grid
+from swaplator.interface.atalhos_teclado import AtalhosTeclado
 from swaplator.interface.display_conversao import DisplayConversao
 from swaplator.interface.painel_tipos import PainelTipos
 from swaplator.interface.formato import converter_para_exibir, formatar_numero
@@ -80,6 +81,9 @@ class CalculadoraView:
             ao_escolher=self.escolher_tipo,
             ao_fechar=self.fechar_painel
         )
+
+        # O teclado físico faz o mesmo que os botões da tela.
+        self.atalhos = AtalhosTeclado(self.frame, self.ao_acao_do_teclado)
 
         self.criar_botoes_numericos()
         self.criar_botoes_operadores()
@@ -239,6 +243,35 @@ class CalculadoraView:
             print(erro)
 
         self.atualizar_display()
+
+
+    def apagar(self):
+        if self._teclado_bloqueado:
+            return
+
+        self.calculadora.apagar()
+        self.atualizar_display()
+
+
+    def ao_acao_do_teclado(self, acao, valor):
+        # Com o painel de tipos aberto, as teclas (Enter, Esc, setas) são dele.
+        if self.painel_aberto:
+            return
+
+        if acao == "digitar":
+            self.digitar(valor)
+
+        elif acao == "operador":
+            self.selecionar_operador(valor)
+
+        elif acao == "calcular":
+            self.calcular()
+
+        elif acao == "limpar":
+            self.limpar()
+
+        elif acao == "apagar":
+            self.apagar()
 
 
     def limpar(self):

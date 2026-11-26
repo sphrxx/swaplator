@@ -27,6 +27,15 @@ class Calculadora:
         self.entrada_atual += valor
 
 
+    def apagar(self):
+        """Apaga o último caractere digitado (Backspace)."""
+        # O resultado de uma conta não é "digitado": não se apaga pedaço dele.
+        if self.novo_numero:
+            return
+
+        self.entrada_atual = self.entrada_atual[:-1]
+
+
     def selecionar_operador(self, operador):
         if(self.entrada_atual == ""):
             raise ValueError("Primeiro número não informado.")

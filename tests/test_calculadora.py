@@ -211,5 +211,43 @@ class TestCalculadora(unittest.TestCase):
         
         self.assertEqual(calculadora.calcular(), 5)
 
+class TestApagar(unittest.TestCase):
+
+    def test_apagar_remove_o_ultimo_caractere(self):
+        calculadora = Calculadora()
+        for valor in "12.5":
+            calculadora.digitar(valor)
+
+        calculadora.apagar()
+
+        self.assertEqual(calculadora.entrada_atual, "12.")
+
+    def test_apagar_tudo_deixa_a_entrada_vazia(self):
+        calculadora = Calculadora()
+        calculadora.digitar("7")
+
+        calculadora.apagar()
+
+        self.assertEqual(calculadora.entrada_atual, "")
+
+    def test_apagar_nao_mexe_no_resultado_de_uma_conta(self):
+        calculadora = Calculadora()
+        calculadora.digitar("7")
+        calculadora.calcular()
+
+        calculadora.apagar()
+
+        self.assertEqual(calculadora.entrada_atual, "7.0")
+
+    def test_apagar_sem_entrada_nao_faz_nada(self):
+        calculadora = Calculadora()
+        calculadora.digitar("4")
+        calculadora.selecionar_operador("+")
+
+        calculadora.apagar()
+
+        self.assertEqual((calculadora.num1, calculadora.operador), (4.0, "+"))
+
+
 if __name__ == '__main__':
     unittest.main()

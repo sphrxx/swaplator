@@ -21,6 +21,7 @@ class Fake:
         self.binds = []         # (sequência, id) de cada bind feito
         self.unbinds = []       # (sequência, id) de cada unbind feito
         self._last_geometry_manager_call = None
+        self.handlers = {}      # sequência -> funções ligadas por bind
 
         if isinstance(master, Fake):
             master.filhos.append(self)
@@ -94,6 +95,8 @@ class Fake:
         # Devolve um id diferente a cada bind, como o Tk faz com add="+".
         id_do_bind = f"id-{len(self.binds)}"
         self.binds.append((args[0], id_do_bind))
+        # Guarda a função para o teste "apertar a tecla" chamando-a de verdade.
+        self.handlers.setdefault(args[0], []).append(args[1])
         return id_do_bind
 
     def unbind(self, sequencia, id_do_bind=None):
@@ -120,6 +123,9 @@ class Fake:
         while isinstance(raiz.master, Fake):
             raiz = raiz.master
         return raiz
+
+    def winfo_class(self):
+        return "Frame"
 
     def winfo_rootx(self):
         return 0
